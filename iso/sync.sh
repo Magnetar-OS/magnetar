@@ -64,6 +64,19 @@ work, did, dname, dlabel, drepo = sys.argv[1:6]
 work = pathlib.Path(work)
 failed = []
 
+def remove(relpath, text, why):
+    """Delete exact text. Absence is what 'already applied' means here, so this
+    cannot share patch()'s marker logic — a removal has no replacement to look
+    for."""
+    p = work / relpath
+    s = p.read_text()
+    if text not in s:
+        print(f"    ok (already) {relpath}: {why}")
+        return
+    p.write_text(s.replace(text, "", 1))
+    print(f"    patched {relpath}: {why}")
+
+
 def patch(relpath, old, new, why, marker=None):
     """Replace exact text, or record a failure naming what moved.
 
@@ -139,6 +152,14 @@ patch("util-iso.sh",
       '        ln -sf /usr/lib/systemd/system/cosmic-greeter.service ${src_dir}/archiso/airootfs/etc/systemd/system/display-manager.service\n'
       '    else',
       "prepare_profile builds the magnetar profile")
+
+# --- profiledef.sh: drop permissions for a file we deleted -------------------
+# mkarchiso warns for every file_permissions entry whose file is missing.
+# calamares-online.sh is removed above — magnetar-install replaces it — so the
+# entry is now noise in every build log.
+remove("archiso/profiledef.sh",
+       '  ["/usr/local/bin/calamares-online.sh"]="0:0:755"\n',
+       "permissions entry for the removed calamares-online.sh")
 
 # --- archiso/pacman.conf: the repo the ISO installs Magnetar packages from -----
 patch("archiso/pacman.conf",
