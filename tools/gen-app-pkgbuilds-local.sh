@@ -25,7 +25,9 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 src_root="$(cd "${1:-$HOME/GitHub}" && pwd)"
 manifest="$root/pkgbuilds/apps/apps.txt"
 outbase="$root/build/pkgbuilds-local"
+shared_target="$root/build/cargo-target"
 count=0
+mkdir -p "$shared_target"
 
 echo "source root: $src_root"
 
@@ -70,6 +72,7 @@ options=('!lto' '!debug')
 
 _src_root='$src_root'
 _app='$name'
+_shared_target='$shared_target'
 _sibs=($(printf "'%s' " "${sibs[@]}"))
 
 # No source=(): the sources are working trees, staged in prepare().
@@ -98,7 +101,12 @@ prepare() {
 build() {
   cd "\$srcdir/tree/\$_app"
   export RUSTUP_TOOLCHAIN=stable
-  export CARGO_TARGET_DIR=target
+  # One target directory shared by every application in the suite. They all
+  # build the same libcosmic/iced dependency tree — around fifteen minutes of
+  # it — and cargo keys artifacts by crate, features and flags, not by which
+  # workspace asked. Sharing turns "fifteen minutes each" into "fifteen minutes
+  # once". It lives outside \$srcdir so makepkg's cleanup does not delete it.
+  export CARGO_TARGET_DIR="\$_shared_target"
   # CachyOS's /etc/makepkg.conf.d/rust.conf sets -C target-cpu=native, which
   # would make this binary SIGILL on any CPU older than the build host.
   export RUSTFLAGS="-C opt-level=3"
@@ -107,7 +115,7 @@ build() {
 
 package() {
   cd "\$srcdir/tree/\$_app"
-  export CARGO_TARGET_DIR=target
+  export CARGO_TARGET_DIR="\$_shared_target"
   just rootdir="\$pkgdir" prefix=/usr install
   install -Dm644 LICENSE "\$pkgdir/usr/share/licenses/\$pkgname/LICENSE" 2>/dev/null \\
     || install -Dm644 LICENSE.md "\$pkgdir/usr/share/licenses/\$pkgname/LICENSE" 2>/dev/null \\
@@ -163,6 +171,7 @@ options=('!lto' '!debug')
 
 _src_root='@SRCROOT@'
 _app='locket'
+_shared_target='@SHAREDTARGET@'
 source=()
 sha256sums=()
 
@@ -181,7 +190,7 @@ prepare() {
 build() {
   cd "$srcdir/tree/$_app"
   export RUSTUP_TOOLCHAIN=stable
-  export CARGO_TARGET_DIR=target
+  export CARGO_TARGET_DIR="$_shared_target"
   # CachyOS's rust.conf sets -C target-cpu=native; that would SIGILL elsewhere.
   export RUSTFLAGS="-C opt-level=3"
   just build-release
@@ -189,12 +198,13 @@ build() {
 
 package() {
   cd "$srcdir/tree/$_app"
-  export CARGO_TARGET_DIR=target
+  export CARGO_TARGET_DIR="$_shared_target"
   just rootdir="$pkgdir" prefix=/usr install
 }
 LOCKET_TEMPLATE
 
-  sed -i -e "s|@SRCROOT@|$src_root|g" -e "s|@DEPENDS@|$locket_deps|" "$dir/PKGBUILD"
+  sed -i -e "s|@SRCROOT@|$src_root|g" -e "s|@DEPENDS@|$locket_deps|" \
+         -e "s|@SHAREDTARGET@|$shared_target|g" "$dir/PKGBUILD"
   count=$((count+1))
   printf '  %-12s siblings: none (depends from its own PKGBUILD)\n' locket
 fi

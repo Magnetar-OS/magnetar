@@ -21,6 +21,11 @@ DROP = {
     'plasma-desktop', 'plasma-integration', 'plasma-nm', 'plasma-pa',
     'plasma-thunderbolt', 'plasma-workspace', 'polkit-kde-agent', 'spectacle',
     'plasma-login-manager', 'cachyos-kde-settings', 'alacritty',
+    # CachyOS's welcome app. It is CachyOS-branded and its install button runs
+    # CachyOS's installer, so on a Magnetar ISO it advertises and installs the
+    # wrong distribution. The installer is reachable from the app library as
+    # "Install Magnetar" (magnetar-calamares).
+    'cachyos-hello',
 }
 
 COSMIC = """# --- COSMIC ---------------------------------------------------------------
