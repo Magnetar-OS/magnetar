@@ -73,7 +73,7 @@ options=('!lto' '!debug')
 _src_root='$src_root'
 _app='$name'
 _shared_target='$shared_target'
-_sibs=($(printf "'%s' " "${sibs[@]}"))
+_sibs=($(for _s in ${sibs[@]+"${sibs[@]}"}; do printf "'%s' " "$_s"; done))
 
 # No source=(): the sources are working trees, staged in prepare().
 source=()
@@ -92,7 +92,10 @@ prepare() {
   mkdir -p "\$srcdir/tree"
   # --exclude target: the working trees carry multi-gigabyte build directories.
   # --exclude .git: nothing in the build reads history.
-  for m in "\$_app" "\${_sibs[@]}"; do
+  for m in "\$_app" \${_sibs[@]+"\${_sibs[@]}"}; do
+    # An empty element would make the rsync source "\$_src_root/", copying the
+    # entire source tree. Belt and braces: the generator no longer emits one.
+    [[ -n "\$m" ]] || continue
     [[ -d "\$_src_root/\$m" ]] || continue
     rsync -a --exclude target --exclude .git "\$_src_root/\$m/" "\$srcdir/tree/\$m/"
   done
