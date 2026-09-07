@@ -47,7 +47,8 @@ for f in \
   etc/skel/.config/systemd/user/plasma-login-kwin_wayland.service.d \
   etc/plasmalogin.conf \
   etc/plasmalogin.conf.d \
-  usr/local/bin/calamares-online.sh
+  usr/local/bin/calamares-online.sh \
+  etc/pacman.d/hooks/90-cachyos-live-kwin-keyboard.hook
 do
   if [[ -e $work/archiso/airootfs/$f ]]; then
     rm -rf "$work/archiso/airootfs/$f"
