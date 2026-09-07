@@ -110,6 +110,47 @@ Do not "solve" that staleness by granting `Upgrade`. A repo pinned to a frozen
 Arch snapshot upgrading packages on a rolling system is the failure mode this
 lock exists to prevent.
 
+### Disabled by default (the bootstrap lock)
+
+The third-party repositories ship **disabled**, and not as caution theatre. A
+repository's keyring package lives *inside the repository it is needed to
+verify*. That makes it impossible to express as a dependency: on a fresh
+install, pacstrap cannot resolve `chaotic-keyring` because `[chaotic-aur]` is
+not configured yet — and configuring it is exactly what the package declaring
+that dependency does.
+
+Building the first ISO is what surfaced this. `magnetar-repos` originally
+hard-depended on all four third-party keyrings and mirrorlists, and pacstrap
+refused the whole transaction:
+
+```
+:: unable to satisfy dependency 'chaotic-keyring' required by magnetar-repos
+```
+
+So enabling is an act, not a default:
+
+```sh
+magnetar-repo status
+magnetar-repo enable chaotic-aur     # imports + lsigns the key, then the keyring
+magnetar-repo enable endeavouros
+magnetar-repo enable valve           # uncomments, stays Usage = Sync Search
+magnetar-repo disable chaotic-aur
+```
+
+`enable` imports the project's signing key, locally signs it, and only then
+installs the keyring — so the keyring package is signature-checked against the
+key you just chose to trust, rather than downloaded and trusted blindly.
+
+This costs nothing in ordering. A repository's position is fixed by the number
+in its filename under `/etc/pacman.d/magnetar-repos.d/`, and every file there
+sorts below the Arch repositories declared in `/etc/pacman.conf`. Enabling one
+late cannot move it up.
+
+Inside a drop-in the convention is: `# text` (hash-space) is prose, `#[repo]`
+(hash immediately followed by content) is a disabled configuration line.
+`magnetar-repo` toggles only the second kind, so the commentary explaining a
+repository is never mistaken for configuration.
+
 ### `SigLevel` (trust)
 Every third-party repository is `SigLevel = Required DatabaseOptional` and ships
 its own keyring package. **No repository in Magnetar uses `TrustAll`.**
@@ -153,7 +194,8 @@ it, why, and what condition retires it.
 
 ## Layout on disk
 
-`magnetar-repos` owns the configuration:
+`magnetar-repos` owns the configuration. Everything below `[multilib]` ships
+disabled; see "Disabled by default" above.
 
 ```
 /etc/pacman.conf                        the ordered file, sections 1-5

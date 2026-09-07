@@ -16,19 +16,26 @@ arch=('any')
 url="https://github.com/entro314-labs/magnetar"
 license=('GPL-3.0-or-later')
 
-# The keyrings and mirrorlists for every repository this package configures.
-# Listed as hard dependencies so the trust path exists before the repository
-# is ever reachable — a repo whose key arrives after the repo does is a repo
-# that gets used unverified once.
+# Only what [cachyos] and Arch can actually provide at install time.
+#
+# The third-party keyrings are NOT dependencies, and this is the bug that
+# building the first ISO exposed: a repository's keyring package lives inside
+# the repository it verifies, so pacstrap on a fresh root cannot resolve it —
+# the repo is not configured yet, because configuring it is what this package
+# does. Those repositories therefore ship disabled, and `magnetar-repo enable`
+# imports the key and fetches the keyring as a deliberate act.
 depends=(
   'pacman'
   'cachyos-keyring' 'cachyos-mirrorlist' 'cachyos-v4-mirrorlist'
-  'endeavouros-keyring' 'endeavouros-mirrorlist'
-  'chaotic-keyring' 'chaotic-mirrorlist'
+  'python'
 )
 
 optdepends=(
   'cachyos-v3-mirrorlist: x86-64-v3 rebuilds, for CPUs without AVX-512'
+  'endeavouros-keyring: required before `magnetar-repo enable endeavouros`'
+  'endeavouros-mirrorlist: required before `magnetar-repo enable endeavouros`'
+  'chaotic-keyring: fetched automatically by `magnetar-repo enable chaotic-aur`'
+  'chaotic-mirrorlist: fetched automatically by `magnetar-repo enable chaotic-aur`'
 )
 
 # Never both. Both ship -x86-64-v3/v4 rebuilds of core and extra; enabled
@@ -66,6 +73,7 @@ package() {
   done
 
   install -Dm755 "$startdir/repo-audit.sh" "$pkgdir/usr/bin/magnetar-repo-audit"
+  install -Dm755 "$startdir/magnetar-repo"  "$pkgdir/usr/bin/magnetar-repo"
 
   # The audit defaults to reading this path; without it every CachyOS override
   # is reported as a policy violation on a working system.

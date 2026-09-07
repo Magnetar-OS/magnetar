@@ -1,0 +1,168 @@
+#!/usr/bin/env bash
+#
+# magnetar-repo — enable, disable and inspect the third-party repositories.
+#
+# These ship disabled, and not out of caution theatre. A repository's keyring
+# lives inside the repository it is needed to verify, so it cannot be a
+# dependency of the package that configures it: a fresh install would have no
+# way to fetch it. Enabling therefore has to be an act that imports a key
+# first, and an act that imports a signing key should be one you took on
+# purpose.
+#
+# Order is not affected by any of this. Each repository's position is fixed by
+# the number in its filename under /etc/pacman.d/magnetar-repos.d/, and every
+# file there sorts below the Arch repositories declared in /etc/pacman.conf.
+# Enabling one late cannot move it up.
+#
+#   magnetar-repo status
+#   magnetar-repo enable  <endeavouros|chaotic-aur|valve>
+#   magnetar-repo disable <endeavouros|chaotic-aur|valve>
+set -euo pipefail
+
+DROPIN_DIR=/etc/pacman.d/magnetar-repos.d
+SELF="${0##*/}"
+
+declare -A FILES=(
+  [endeavouros]="$DROPIN_DIR/60-endeavouros.conf"
+  [chaotic-aur]="$DROPIN_DIR/70-chaotic-aur.conf"
+  [valve]="$DROPIN_DIR/80-valve.conf"
+)
+
+# Fingerprints read from the installed keyring packages, not copied from a
+# forum post. Verify them against the projects' own documentation before
+# trusting this file.
+declare -A KEYS=(
+  [endeavouros]="8F43FC374CD4CEEA19CEE323E3D8752ACDF595A1"
+  [chaotic-aur]="EF925EA60F33D0CB85C44AD13056513887B78AEB"
+)
+
+die() { echo "$SELF: $*" >&2; exit 1; }
+need_root() { [[ $(id -u) -eq 0 ]] || die "needs root: sudo $SELF $*"; }
+
+_is_enabled() {
+  # An enabled block has config lines that are not commented. Prose comments
+  # use "# text"; disabled config uses "#[repo]" — hash immediately followed by
+  # content. Only the second kind is toggled.
+  local f="${FILES[$1]}"
+  [[ -r $f ]] || return 1
+  awk -v r="$1" '
+    $0 == "# >>> magnetar-repo:" r { inb=1; next }
+    $0 == "# <<< magnetar-repo:" r { inb=0 }
+    inb && /^\[/ { found=1 }
+    END { exit(found ? 0 : 1) }
+  ' "$f"
+}
+
+cmd_status() {
+  printf '%-14s %-9s %s\n' REPOSITORY STATE FILE
+  for r in endeavouros chaotic-aur valve; do
+    local state="disabled"
+    _is_enabled "$r" && state="ENABLED"
+    printf '%-14s %-9s %s\n' "$r" "$state" "${FILES[$r]}"
+  done
+  echo
+  echo "Order is fixed by the filename number and cannot be changed by enabling."
+  echo "Verify the result with: magnetar-repo-audit"
+}
+
+_toggle() {
+  local repo="$1" action="$2" f="${FILES[$repo]}"
+  python3 - "$f" "$repo" "$action" <<'PY'
+import sys, pathlib
+path, repo, action = sys.argv[1], sys.argv[2], sys.argv[3]
+p = pathlib.Path(path)
+out, inblock = [], False
+for line in p.read_text().splitlines():
+    if line == f"# >>> magnetar-repo:{repo}":
+        inblock = True; out.append(line); continue
+    if line == f"# <<< magnetar-repo:{repo}":
+        inblock = False; out.append(line); continue
+    if inblock:
+        if action == "enable" and line.startswith("#") and not line.startswith("# "):
+            out.append(line[1:]); continue
+        if action == "disable" and line and not line.startswith("#"):
+            out.append("#" + line); continue
+    out.append(line)
+p.write_text("\n".join(out) + "\n")
+PY
+}
+
+cmd_enable() {
+  local repo="${1:-}"
+  [[ -n ${FILES[$repo]:-} ]] || die "unknown repository '$repo' (endeavouros, chaotic-aur, valve)"
+  need_root enable "$repo"
+
+  if _is_enabled "$repo"; then
+    echo "$SELF: $repo is already enabled"
+    return 0
+  fi
+
+  case "$repo" in
+    endeavouros|chaotic-aur)
+      local fpr="${KEYS[$repo]}"
+      echo "==> importing and locally signing $repo's key"
+      echo "    $fpr"
+      pacman-key --recv-keys "$fpr" --keyserver keyserver.ubuntu.com
+      pacman-key --lsign-key "$fpr"
+      ;;&
+    chaotic-aur)
+      echo "==> installing chaotic-keyring and chaotic-mirrorlist"
+      # Verified against the key just signed — pacman -U checks the signature,
+      # so this is not an unverified download.
+      pacman -U --noconfirm \
+        'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst' \
+        'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst'
+      ;;
+    endeavouros)
+      echo "==> installing endeavouros-keyring and endeavouros-mirrorlist"
+      if ! pacman -S --needed --noconfirm endeavouros-keyring endeavouros-mirrorlist 2>/dev/null; then
+        cat >&2 <<'MSG'
+
+Those packages live in the EndeavourOS repository itself, which is what we are
+trying to enable — a chicken-and-egg this script cannot break for you safely.
+
+Install them once from a mirror listed at
+https://endeavouros.com/mirrorlist/ with `pacman -U`, then run this again. The
+key is already imported and locally signed, so pacman will verify them.
+
+MSG
+        exit 1
+      fi
+      ;;
+    valve)
+      cat <<'MSG'
+
+Valve's repositories target SteamOS, a frozen Arch snapshot. Enabling them
+uncomments two sections that stay locked with `Usage = Sync Search`: they can
+be synced and searched, and cannot install or upgrade anything.
+
+Read /etc/pacman.d/magnetar-repos.d/80-valve.conf before relying on this.
+Nothing here verifies Valve's signing key, because nothing here can install
+from those repositories.
+
+MSG
+      ;;
+  esac
+
+  _toggle "$repo" enable
+  echo "==> $repo enabled in ${FILES[$repo]}"
+  echo "    run: pacman -Sy && magnetar-repo-audit"
+}
+
+cmd_disable() {
+  local repo="${1:-}"
+  [[ -n ${FILES[$repo]:-} ]] || die "unknown repository '$repo'"
+  need_root disable "$repo"
+  _toggle "$repo" disable
+  echo "==> $repo disabled"
+  echo "    Packages already installed from it stay installed and stop receiving"
+  echo "    updates. List them with: pacman -Qm"
+}
+
+case "${1:-status}" in
+  status)  cmd_status ;;
+  enable)  shift; cmd_enable "${1:-}" ;;
+  disable) shift; cmd_disable "${1:-}" ;;
+  -h|--help|help) sed -n '2,22p' "$0" | sed 's/^# \?//' ;;
+  *) die "unknown command '${1}'. Try: status, enable, disable" ;;
+esac

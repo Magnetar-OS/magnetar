@@ -23,8 +23,17 @@ Verify the result at any time with:
 
   magnetar-repo-audit
 
-Valve's jupiter/holo repositories ship commented out and locked
-(Usage = Sync Search). Read 80-valve.conf before enabling them.
+Third-party repositories ship DISABLED. A repository's keyring lives inside
+the repository it verifies, so it cannot be a dependency of this package —
+enabling has to import a key first, and that should be deliberate:
+
+  magnetar-repo status
+  magnetar-repo enable chaotic-aur
+  magnetar-repo enable endeavouros
+  magnetar-repo enable valve        (stays locked: Usage = Sync Search)
+
+Enabling one late cannot change its priority: order is fixed by the number in
+its filename, and every file there sorts below the Arch repositories.
 
 MSG
 }
