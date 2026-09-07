@@ -1,13 +1,13 @@
 post_install() {
   cat <<'MSG'
 
-Pharos COSMIC defaults installed to /etc/skel.
+Magnetar COSMIC defaults installed to /etc/skel.
 
 New accounts get them automatically. This account does not — /etc/skel applies
 at account creation only. To take them:
 
-  pharos-apply-defaults --dry-run    # see what would change
-  pharos-apply-defaults              # apply, never overwriting what you set
+  magnetar-apply-defaults --dry-run    # see what would change
+  magnetar-apply-defaults              # apply, never overwriting what you set
 
 What changes:
   Super+space         launcher -> jump
@@ -25,10 +25,10 @@ MSG
 post_upgrade() {
   cat <<'MSG'
 
-pharos-settings: defaults in /etc/skel were updated. Existing accounts are not
+magnetar-settings: defaults in /etc/skel were updated. Existing accounts are not
 touched. Review and apply with:
 
-  pharos-apply-defaults --dry-run
+  magnetar-apply-defaults --dry-run
 
 MSG
 }

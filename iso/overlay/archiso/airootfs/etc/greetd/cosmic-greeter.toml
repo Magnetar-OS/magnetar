@@ -1,4 +1,4 @@
-# Pharos live session.
+# Magnetar live session.
 #
 # Overrides the file cosmic-greeter ships. archiso copies airootfs over the
 # pacstrapped root after installation, so this wins on the live image only —

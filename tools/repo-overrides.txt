@@ -68,10 +68,10 @@ cachyos:python-dataclasses-json
 cachyos:voa-verifiers-arch
 cachyos:lib32-freeglut
 
-# Desktop — NOT inherited by Pharos.
+# Desktop — NOT inherited by Magnetar.
 # plasma-login-manager and dms-shell are CachyOS's Plasma session pieces.
-# Pharos is a COSMIC distribution and installs neither, so these are recorded
-# for completeness and should never appear in an installed Pharos system.
+# Magnetar is a COSMIC distribution and installs neither, so these are recorded
+# for completeness and should never appear in an installed Magnetar system.
 # If the audit ever reports one as installed, something pulled in Plasma.
 cachyos:plasma-login-manager
 cachyos:dms-shell

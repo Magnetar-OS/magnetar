@@ -1,4 +1,4 @@
-# Pharos application packages, built from git.
+# Magnetar application packages, built from git.
 #
 # Format: name|pkgdesc|extra depends (space separated)|extra optdepends (comma separated)
 #

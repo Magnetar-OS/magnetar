@@ -1,6 +1,6 @@
 # Repository order and locking
 
-Pharos enables more third-party pacman repositories than stock Arch. That is a
+Magnetar enables more third-party pacman repositories than stock Arch. That is a
 deliberate feature and the single most likely way to break the system, so the
 order and the locks are policy, not preference.
 
@@ -36,12 +36,12 @@ Three consequences:
 [cachyos-core-znver4]
 [cachyos-extra-znver4]
 
-# 2. This distribution. Above [cachyos] so a Pharos package can deliberately
-#    replace a CachyOS one (pharos-settings over cachyos-settings, say).
+# 2. This distribution. Above [cachyos] so a Magnetar package can deliberately
+#    replace a CachyOS one (magnetar-settings over cachyos-settings, say).
 #    Below the v3/v4 repos so it can never shadow an optimised rebuild.
-#    Every package here is named pharos-*, so incidental shadowing is
+#    Every package here is named magnetar-*, so incidental shadowing is
 #    structurally impossible; tools/repo-audit.sh proves it each build.
-[pharos]
+[magnetar]
 
 # 3. CachyOS proper: kernels, chwd, settings, gaming stack.
 [cachyos]
@@ -83,7 +83,7 @@ system nobody can support, including us.
 | `jupiter` / `holo` (Valve) | SteamOS's own packages: `jupiter-hw-support`, `steamdeck-dsp`, Deck firmware and hardware quirks. | **High and structural.** These target SteamOS's *frozen* Arch snapshot, not rolling Arch. Names like `mesa` and `gamescope` exist there at versions pinned to a distribution we are not. | Locked (below). Off by default. |
 
 **Be honest about Valve's repos before enabling them.** Most of what people
-want from them, Pharos already has from CachyOS: `proton-cachyos`,
+want from them, Magnetar already has from CachyOS: `proton-cachyos`,
 `gamescope-session`, `wine-cachyos`, the gaming meta package, and a kernel
 tuned harder than Valve's. What is genuinely Deck-only is hardware enablement
 for hardware you are not running. Enable them if you are targeting Deck
@@ -112,7 +112,7 @@ lock exists to prevent.
 
 ### `SigLevel` (trust)
 Every third-party repository is `SigLevel = Required DatabaseOptional` and ships
-its own keyring package. **No repository in Pharos uses `TrustAll`.**
+its own keyring package. **No repository in Magnetar uses `TrustAll`.**
 
 `SigLevel = Optional TrustAll` — which appears in a lot of copy-pasted
 instructions, including the current `arch-repo` README's quick-start — means
@@ -120,23 +120,23 @@ unsigned packages from that host execute install scripts as root, unverified.
 That is acceptable for a personal repo you are testing; it is not acceptable in
 a distribution's default `pacman.conf`, where the user did not choose the host.
 
-Keyrings are installed as dependencies of `pharos-repos`, so the trust path
+Keyrings are installed as dependencies of `magnetar-repos`, so the trust path
 exists before the repository is ever reachable.
 
 ### `HoldPkg` (removal guard)
 ```ini
-HoldPkg = pacman glibc systemd base linux-cachyos pharos-repos pharos-keyring
+HoldPkg = pacman glibc systemd base linux-cachyos magnetar-repos magnetar-keyring
 ```
 Not a version pin — pacman has no version pinning. It forces a confirmation
 prompt before removing anything that would leave the machine unbootable or
-unable to install packages, `pharos-repos` included: dropping it silently
+unable to install packages, `magnetar-repos` included: dropping it silently
 removes the repository configuration that everything else depends on.
 
 ### `IgnorePkg` (targeted, temporary)
 Empty by default and it should stay that way. An `IgnorePkg` entry is a
 partial upgrade waiting to happen — on a rolling release it breaks the machine
 eventually, not immediately. If one is ever needed, it belongs in
-`/etc/pacman.d/pharos-repos.d/99-local.conf` with a comment saying who added
+`/etc/pacman.d/magnetar-repos.d/99-local.conf` with a comment saying who added
 it, why, and what condition retires it.
 
 ### Forbidden combinations
@@ -144,7 +144,7 @@ it, why, and what condition retires it.
 - **ALHP with the CachyOS v3/v4 repos.** Both ship `-x86-64-v3`/`v4` rebuilds of
   `core` and `extra`. Enabled together, order decides which rebuild you get per
   package and you end up with a base system split across two build farms with
-  different toolchains. Pick one. Pharos picks CachyOS.
+  different toolchains. Pick one. Magnetar picks CachyOS.
 - **Arch `*-testing` above the CachyOS repos.** Defeats the optimised rebuilds
   and mixes two release cadences.
 - **Any AUR-derived repository above `extra`.** Includes `chaotic-aur`,
@@ -153,18 +153,18 @@ it, why, and what condition retires it.
 
 ## Layout on disk
 
-`pharos-repos` owns the configuration:
+`magnetar-repos` owns the configuration:
 
 ```
 /etc/pacman.conf                        the ordered file, sections 1-5
-/etc/pacman.d/pharos-repos.d/60-endeavouros.conf
-/etc/pacman.d/pharos-repos.d/70-chaotic-aur.conf
-/etc/pacman.d/pharos-repos.d/80-valve.conf      (locked, Usage = Sync Search)
-/etc/pacman.d/pharos-repos.d/99-local.conf      (yours, never packaged)
-/usr/share/pharos/pacman.conf                   the canonical reference copy
+/etc/pacman.d/magnetar-repos.d/60-endeavouros.conf
+/etc/pacman.d/magnetar-repos.d/70-chaotic-aur.conf
+/etc/pacman.d/magnetar-repos.d/80-valve.conf      (locked, Usage = Sync Search)
+/etc/pacman.d/magnetar-repos.d/99-local.conf      (yours, never packaged)
+/usr/share/magnetar/pacman.conf                   the canonical reference copy
 ```
 
-`pacman.conf` ends with `Include = /etc/pacman.d/pharos-repos.d/*.conf`. The
+`pacman.conf` ends with `Include = /etc/pacman.d/magnetar-repos.d/*.conf`. The
 glob expands in filename order, which is why the files are numbered: the number
 *is* the priority, and every one of them sorts below the Arch repositories
 declared inline above the `Include`. A drop-in cannot accidentally outrank

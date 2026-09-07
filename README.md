@@ -1,16 +1,12 @@
-# Pharos
+# Magnetar
 
 COSMIC on CachyOS, as an actual distribution: a live ISO, a pacman repository,
 and the packages that make a stock CachyOS install into this one.
 
-> **The name is a placeholder.** `pharos` is a stand-in until the real name is
-> settled. Everything that names the distribution reads `branding.env`, so the
-> rename is one commit — but do it before the first public ISO, not after.
-
 ## What this is
 
 CachyOS ships one desktop edition: Plasma. There is no CachyOS COSMIC edition
-and no `cachyos-cosmic-settings` package. That gap is what Pharos fills:
+and no `cachyos-cosmic-settings` package. That gap is what Magnetar fills:
 CachyOS's kernel, hardware detection, optimised repositories and tuning,
 with COSMIC on top and a suite of COSMIC applications that do not exist
 anywhere else.
@@ -18,9 +14,9 @@ anywhere else.
 | Piece | What it does |
 |---|---|
 | [`iso/`](iso/) | Live ISO. An **overlay** on CachyOS-Live-ISO, not a fork. |
-| [`pkgbuilds/pharos-repos`](pkgbuilds/pharos-repos/) | Repository order, signing and locks. |
-| [`pkgbuilds/pharos-settings`](pkgbuilds/pharos-settings/) | COSMIC session defaults, via `/etc/skel`. |
-| [`pkgbuilds/pharos-desktop`](pkgbuilds/pharos-desktop/) | The meta package. Install it and a CachyOS machine becomes Pharos. |
+| [`pkgbuilds/magnetar-repos`](pkgbuilds/magnetar-repos/) | Repository order, signing and locks. |
+| [`pkgbuilds/magnetar-settings`](pkgbuilds/magnetar-settings/) | COSMIC session defaults, via `/etc/skel`. |
+| [`pkgbuilds/magnetar-desktop`](pkgbuilds/magnetar-desktop/) | The meta package. Install it and a CachyOS machine becomes Magnetar. |
 | [`pkgbuilds/apps/`](pkgbuilds/apps/) | The suite, packaged from git until it tags. |
 | [`tools/`](tools/) | The generators and the audit. |
 
@@ -29,7 +25,7 @@ anywhere else.
 **Repository order is the whole ballgame.** pacman takes each package from the
 first repository in `pacman.conf` that carries the name and never looks lower —
 a newer build underneath is simply not considered. Position *is* priority, and
-it is the only lock pacman applies automatically. Pharos enables Chaotic-AUR,
+it is the only lock pacman applies automatically. Magnetar enables Chaotic-AUR,
 EndeavourOS and (locked, off) Valve's SteamOS repositories, so this is the part
 that decides whether the distribution is stable. It is written down in
 [`docs/REPOS.md`](docs/REPOS.md) and checked by `tools/repo-audit.sh` on every
@@ -53,11 +49,11 @@ the alternative is an ISO that is quietly wrong.
 ```sh
 # Live ISO
 ./iso/sync.sh
-cd build/iso-src && sudo ./buildiso.sh -p pharos -v -w
-# -> build/iso-src/out/pharos/
+cd build/iso-src && sudo ./buildiso.sh -p magnetar -v -w
+# -> build/iso-src/out/magnetar/
 
 # A package
-makepkg -sf -D pkgbuilds/pharos-settings
+makepkg -sf -D pkgbuilds/magnetar-settings
 
 # Check the repository policy still holds
 tools/repo-audit.sh
@@ -85,7 +81,7 @@ read off a running COSMIC 1.7.0 rather than assumed.
 
 Not yet done, in the order it blocks things:
 
-1. **`pharos-repo` does not exist.** The `[pharos]` repository is configured
+1. **`magnetar-repo` does not exist.** The `[magnetar]` repository is configured
    everywhere and served nowhere, so no ISO can build. Mirror `arch-repo`'s
    layout and reuse `linux-release-kit`'s `arch-repo.yml`. `packages.yml`
    builds the packages today and fails at the publish step, on purpose.
@@ -96,8 +92,8 @@ Not yet done, in the order it blocks things:
    is in the package list and will come up branded as CachyOS, if it comes up.
 4. **Per-app dependencies are the libcosmic base set only.** namcap runs in CI
    and reports the rest; the additions have not been made.
-5. **No keyring package.** `[pharos]` is `SigLevel = Required` against a key
-   that has no `pharos-keyring` to distribute it.
+5. **No keyring package.** `[magnetar]` is `SigLevel = Required` against a key
+   that has no `magnetar-keyring` to distribute it.
 
 ## Licence
 

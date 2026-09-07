@@ -2,9 +2,9 @@ name: Repo policy
 
 on:
   push:
-    paths: ['pkgbuilds/pharos-repos/**', 'tools/repo-audit.sh', 'tools/repo-overrides.txt']
+    paths: ['pkgbuilds/magnetar-repos/**', 'tools/repo-audit.sh', 'tools/repo-overrides.txt']
   pull_request:
-    paths: ['pkgbuilds/pharos-repos/**', 'tools/repo-audit.sh', 'tools/repo-overrides.txt']
+    paths: ['pkgbuilds/magnetar-repos/**', 'tools/repo-audit.sh', 'tools/repo-overrides.txt']
   workflow_dispatch:
 
 jobs:
@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install the Pharos pacman.conf
+      - name: Install the Magnetar pacman.conf
         run: |
           pacman-key --init
           pacman-key --recv-keys F3B607488DB35A47 --keyserver keyserver.ubuntu.com
@@ -26,9 +26,9 @@ jobs:
           pacman -Syu --noconfirm cachyos-keyring cachyos-mirrorlist cachyos-v4-mirrorlist \
                                   endeavouros-mirrorlist chaotic-mirrorlist || true
 
-          cp pkgbuilds/pharos-repos/pacman.conf /etc/pacman.conf
-          mkdir -p /etc/pacman.d/pharos-repos.d
-          cp pkgbuilds/pharos-repos/repos.d/*.conf /etc/pacman.d/pharos-repos.d/
+          cp pkgbuilds/magnetar-repos/pacman.conf /etc/pacman.conf
+          mkdir -p /etc/pacman.d/magnetar-repos.d
+          cp pkgbuilds/magnetar-repos/repos.d/*.conf /etc/pacman.d/magnetar-repos.d/
           pacman -Sy || true
 
       # Fails on: a repository above Arch winning a name it does not declare an
@@ -36,5 +36,5 @@ jobs:
       # enabled alongside the CachyOS optimised repos.
       - name: Audit
         env:
-          PHAROS_REPO_OVERRIDES: tools/repo-overrides.txt
+          MAGNETAR_REPO_OVERRIDES: tools/repo-overrides.txt
         run: ./tools/repo-audit.sh

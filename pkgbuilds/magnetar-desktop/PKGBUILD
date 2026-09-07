@@ -1,26 +1,26 @@
 # Maintainer: Dominikos Pritis <hey@myroomie.gr>
 #
-# The meta package that defines a Pharos desktop. Installing this on a stock
-# CachyOS machine turns it into Pharos; removing it leaves the underlying
+# The meta package that defines a Magnetar desktop. Installing this on a stock
+# CachyOS machine turns it into Magnetar; removing it leaves the underlying
 # CachyOS intact.
 #
 # depends vs optdepends here is a real distinction, not a formality:
-#   depends    — remove it and this is no longer Pharos.
+#   depends    — remove it and this is no longer Magnetar.
 #   optdepends — the suite. Genuinely optional, and each one is a WIP app that
 #                should not be able to block the desktop from installing.
-pkgname=pharos-desktop
+pkgname=magnetar-desktop
 pkgver=0.1.0
 pkgrel=1
-pkgdesc="Pharos: COSMIC desktop on CachyOS"
+pkgdesc="Magnetar: COSMIC desktop on CachyOS"
 arch=('any')
-url="https://github.com/entro314-labs/pharos"
+url="https://github.com/entro314-labs/magnetar"
 license=('GPL-3.0-or-later')
 
 depends=(
   # Repository configuration first — everything below is reachable because of
   # it, and it carries the keyrings.
-  'pharos-repos'
-  'pharos-settings'
+  'magnetar-repos'
+  'magnetar-settings'
 
   # COSMIC. cosmic-session pulls the compositor, panel and settings daemon;
   # the rest are named because a desktop without them is broken, not minimal.
@@ -70,7 +70,7 @@ depends=(
 optdepends=(
   # The suite. Every one is pre-1.0 and unreleased; none of them should be
   # able to block a desktop install.
-  'jump: Spotlight-class launcher (bound to Super+space by pharos-settings)'
+  'jump: Spotlight-class launcher (bound to Super+space by magnetar-settings)'
   'peek: QuickLook-class file previewer'
   'grabit: selection actions over any Wayland surface'
   'locket: password manager, Secret Service and SSH agent'
@@ -84,6 +84,6 @@ optdepends=(
   'flatpak: applications COSMIC Store installs by default'
 )
 
-# jump is a hard dependency of pharos-settings, which redirects the Launcher
+# jump is a hard dependency of magnetar-settings, which redirects the Launcher
 # system action to it. It appears in optdepends above for discoverability;
-# pacman resolves it through pharos-settings either way.
+# pacman resolves it through magnetar-settings either way.

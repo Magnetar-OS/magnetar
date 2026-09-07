@@ -1,19 +1,19 @@
 # Maintainer: Dominikos Pritis <hey@myroomie.gr>
 #
 # Owns the repository configuration and nothing else. Splitting this out from
-# pharos-settings is deliberate: repository order is the part of the system
+# magnetar-settings is deliberate: repository order is the part of the system
 # that breaks machines, and it should be inspectable, versioned and revertible
 # on its own.
 #
 # This package does NOT overwrite /etc/pacman.conf on upgrade. It ships the
-# canonical file to /usr/share/pharos/pacman.conf and installs the drop-ins;
+# canonical file to /usr/share/magnetar/pacman.conf and installs the drop-ins;
 # adopting a new canonical pacman.conf is an explicit act (see the .install).
-pkgname=pharos-repos
+pkgname=magnetar-repos
 pkgver=0.1.0
 pkgrel=1
-pkgdesc="Pacman repository configuration for Pharos: ordered, signed, locked"
+pkgdesc="Pacman repository configuration for Magnetar: ordered, signed, locked"
 arch=('any')
-url="https://github.com/entro314-labs/pharos"
+url="https://github.com/entro314-labs/magnetar"
 license=('GPL-3.0-or-later')
 
 # The keyrings and mirrorlists for every repository this package configures.
@@ -37,10 +37,10 @@ optdepends=(
 conflicts=('alhp-keyring' 'alhp-mirrorlist')
 
 backup=(
-  'etc/pacman.d/pharos-repos.d/60-endeavouros.conf'
-  'etc/pacman.d/pharos-repos.d/70-chaotic-aur.conf'
-  'etc/pacman.d/pharos-repos.d/80-valve.conf'
-  'etc/pacman.d/pharos-repos.d/99-local.conf'
+  'etc/pacman.d/magnetar-repos.d/60-endeavouros.conf'
+  'etc/pacman.d/magnetar-repos.d/70-chaotic-aur.conf'
+  'etc/pacman.d/magnetar-repos.d/80-valve.conf'
+  'etc/pacman.d/magnetar-repos.d/99-local.conf'
 )
 
 install="$pkgname.install"
@@ -59,11 +59,11 @@ package() {
   # place on a fresh system. Deliberately not installed as /etc/pacman.conf:
   # overwriting a live pacman.conf on upgrade would silently revert whatever
   # the machine's owner had changed, including their locks.
-  install -Dm644 "$srcdir/pacman.conf" "$pkgdir/usr/share/pharos/pacman.conf"
+  install -Dm644 "$srcdir/pacman.conf" "$pkgdir/usr/share/magnetar/pacman.conf"
 
   for f in 60-endeavouros 70-chaotic-aur 80-valve 99-local; do
-    install -Dm644 "$srcdir/$f.conf" "$pkgdir/etc/pacman.d/pharos-repos.d/$f.conf"
+    install -Dm644 "$srcdir/$f.conf" "$pkgdir/etc/pacman.d/magnetar-repos.d/$f.conf"
   done
 
-  install -Dm755 "$srcdir/repo-audit.sh" "$pkgdir/usr/bin/pharos-repo-audit"
+  install -Dm755 "$srcdir/repo-audit.sh" "$pkgdir/usr/bin/magnetar-repo-audit"
 }

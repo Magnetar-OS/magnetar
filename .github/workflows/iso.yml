@@ -29,7 +29,7 @@ jobs:
       # sync.sh asserts against exact upstream text and exits non-zero when
       # CachyOS has moved. That failure is the point of this step: it is the
       # signal to re-read their file, not a flake to retry.
-      - name: Fetch upstream and apply the Pharos overlay
+      - name: Fetch upstream and apply the Magnetar overlay
         run: ./iso/sync.sh
 
       - name: Build
@@ -50,7 +50,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: pharos-iso
+          name: magnetar-iso
           path: |
             build/iso-src/out/*/*.iso
             build/iso-src/out/*/SHA256SUMS

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Fetch CachyOS-Live-ISO at the pinned ref, apply the Pharos overlay, and leave
+# Fetch CachyOS-Live-ISO at the pinned ref, apply the Magnetar overlay, and leave
 # a tree that buildiso.sh can run.
 #
 # Why an overlay instead of a fork: CachyOS actively maintains that repo, and a
@@ -15,7 +15,7 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 # shellcheck source=/dev/null
 source "$root/branding.env"
 
-work="${PHAROS_ISO_WORK:-$root/build/iso-src}"
+work="${MAGNETAR_ISO_WORK:-$root/build/iso-src}"
 overlay="$root/iso/overlay"
 
 echo "==> upstream: $UPSTREAM_ISO_REPO @ $UPSTREAM_ISO_REF"
@@ -77,7 +77,7 @@ patch("archiso/profiledef.sh",
       f'iso_application="{dname} Live"',
       "iso_application")
 
-# --- util-iso.sh: teach it the pharos profile -------------------------------
+# --- util-iso.sh: teach it the magnetar profile -------------------------------
 # Upstream hardcodes a single 'desktop' profile and dies on anything else.
 # Three functions test for it; each gets the new profile alongside, never
 # instead — the desktop profile keeps working, which is what makes a bad patch
@@ -87,14 +87,14 @@ patch("util-iso.sh",
       "        cat << 'EOF' > ${src_dir}/archiso/airootfs/etc/environment",
       f'    if [ "$_profile" == "desktop" ] || [ "$_profile" == "{did}" ]; then\n'
       "        cat << 'EOF' > ${src_dir}/archiso/airootfs/etc/environment",
-      "generate_environment accepts the pharos profile")
+      "generate_environment accepts the magnetar profile")
 
 patch("util-iso.sh",
       '    if [ "$_profile" == "desktop" ]; then\n'
       '        echo "${_version}" > ${src_dir}/archiso/airootfs/etc/version-tag',
       f'    if [ "$_profile" == "desktop" ] || [ "$_profile" == "{did}" ]; then\n'
       '        echo "${_version}" > ${src_dir}/archiso/airootfs/etc/version-tag',
-      "generate_version_tag accepts the pharos profile")
+      "generate_version_tag accepts the magnetar profile")
 
 # The display manager: Plasma's greeter for the upstream profile, COSMIC's for
 # ours. This is the one line that decides which desktop the live session boots.
@@ -114,21 +114,21 @@ patch("util-iso.sh",
       '        # instead boots the plain agreety text greeter.\n'
       '        ln -sf /usr/lib/systemd/system/cosmic-greeter.service ${src_dir}/archiso/airootfs/etc/systemd/system/display-manager.service\n'
       '    else',
-      "prepare_profile builds the pharos profile")
+      "prepare_profile builds the magnetar profile")
 
-# --- archiso/pacman.conf: the repo the ISO installs Pharos packages from -----
+# --- archiso/pacman.conf: the repo the ISO installs Magnetar packages from -----
 patch("archiso/pacman.conf",
       "[cachyos]\nServer = https://mirror.cachyos.org/repo/$arch/$repo",
       "[cachyos]\nServer = https://mirror.cachyos.org/repo/$arch/$repo\n"
       "\n"
-      "# Pharos packages. Below [cachyos] and above [core], matching the order\n"
+      "# Magnetar packages. Below [cachyos] and above [core], matching the order\n"
       "# the installed system gets — see docs/REPOS.md. Signed: the build must\n"
       "# fail on a bad signature rather than bake an unverified package into an\n"
       "# ISO that other people boot.\n"
       f"[{did}]\n"
       "SigLevel = Required DatabaseOptional\n"
       f"Server = {drepo}/$arch",
-      "pharos repository available at build time",
+      "magnetar repository available at build time",
       marker=f"[{did}]")
 
 if failed:

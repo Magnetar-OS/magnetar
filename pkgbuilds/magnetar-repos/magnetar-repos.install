@@ -1,18 +1,18 @@
-_canonical=/usr/share/pharos/pacman.conf
+_canonical=/usr/share/magnetar/pacman.conf
 
 post_install() {
   cat <<'MSG'
 
-Pharos repository configuration installed.
+Magnetar repository configuration installed.
 
-  Drop-ins:      /etc/pacman.d/pharos-repos.d/
-  Canonical:     /usr/share/pharos/pacman.conf
-  Policy:        https://github.com/entro314-labs/pharos/blob/main/docs/REPOS.md
+  Drop-ins:      /etc/pacman.d/magnetar-repos.d/
+  Canonical:     /usr/share/magnetar/pacman.conf
+  Policy:        https://github.com/entro314-labs/magnetar/blob/main/docs/REPOS.md
 
 /etc/pacman.conf was NOT modified. On an existing system, review the canonical
 file against yours and adopt it deliberately:
 
-  diff -u /etc/pacman.conf /usr/share/pharos/pacman.conf
+  diff -u /etc/pacman.conf /usr/share/magnetar/pacman.conf
 
 Repository ORDER in that file is a hard priority — pacman takes each package
 from the first repo that carries it and ignores newer builds below. Reordering
@@ -21,7 +21,7 @@ build farm. Read the policy before you do.
 
 Verify the result at any time with:
 
-  pharos-repo-audit
+  magnetar-repo-audit
 
 Valve's jupiter/holo repositories ship commented out and locked
 (Usage = Sync Search). Read 80-valve.conf before enabling them.
@@ -36,7 +36,7 @@ post_upgrade() {
   if ! diff -q /etc/pacman.conf "$_canonical" >/dev/null 2>&1; then
     cat <<MSG
 
-pharos-repos: /etc/pacman.conf differs from the canonical file shipped in this
+magnetar-repos: /etc/pacman.conf differs from the canonical file shipped in this
 version. That may be entirely intentional — your locks live there too. Review
 when convenient:
 

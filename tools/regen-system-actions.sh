@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 #
-# Regenerate pharos-settings' system_actions from the installed COSMIC
-# defaults, re-applying only the entries Pharos redirects.
+# Regenerate magnetar-settings' system_actions from the installed COSMIC
+# defaults, re-applying only the entries Magnetar redirects.
 #
 # Run this after a COSMIC update. Shipping a stale copy of a 26-entry map is
 # how a distribution quietly loses a system action upstream added.
 set -euo pipefail
 
 SRC=/usr/share/cosmic/com.system76.CosmicSettings.Shortcuts/v1/system_actions
-DST="$(dirname "$0")/../pkgbuilds/pharos-settings/skel/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1/system_actions"
+DST="$(dirname "$0")/../pkgbuilds/magnetar-settings/skel/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1/system_actions"
 
 [[ -r $SRC ]] || { echo "regen: $SRC not found — is cosmic-settings-daemon installed?" >&2; exit 2; }
 
@@ -18,7 +18,7 @@ DST="$(dirname "$0")/../pkgbuilds/pharos-settings/skel/.config/cosmic/com.system
 
 {
   cat <<'HDR'
-// Pharos: COSMIC system actions.
+// Magnetar: COSMIC system actions.
 //
 // Generated from the cosmic-settings-daemon defaults, with two entries
 // redirected. The whole map is shipped rather than a two-line override:

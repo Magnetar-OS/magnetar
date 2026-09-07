@@ -1,6 +1,6 @@
 # Maintainer: Dominikos Pritis <hey@myroomie.gr>
 #
-# The COSMIC session defaults that make a Pharos desktop a Pharos desktop.
+# The COSMIC session defaults that make a Magnetar desktop a Magnetar desktop.
 #
 # Everything here goes to /etc/skel. Nothing is installed into
 # /usr/share/cosmic/: those paths are owned by the upstream cosmic-*
@@ -8,15 +8,15 @@
 # an override. /etc/skel is the mechanism a distribution actually has.
 #
 # The tradeoff is that /etc/skel applies at account creation only. Existing
-# accounts get the same files through `pharos-apply-defaults`, run by hand.
+# accounts get the same files through `magnetar-apply-defaults`, run by hand.
 # That is on purpose — rewriting a running desktop's configuration during a
 # package upgrade is not a thing this should do.
-pkgname=pharos-settings
+pkgname=magnetar-settings
 pkgver=0.1.0
 pkgrel=1
-pkgdesc="COSMIC session defaults for Pharos"
+pkgdesc="COSMIC session defaults for Magnetar"
 arch=('any')
-url="https://github.com/entro314-labs/pharos"
+url="https://github.com/entro314-labs/magnetar"
 license=('GPL-3.0-or-later')
 
 depends=('cosmic-session' 'cosmic-settings-daemon')
@@ -34,7 +34,7 @@ optdepends=(
 )
 
 source=(
-  'pharos-apply-defaults'
+  'magnetar-apply-defaults'
   'skel/.config/cosmic/com.system76.CosmicTheme.Mode/v1/is_dark'
   'skel/.config/cosmic/com.system76.CosmicTheme.Mode/v1/auto_switch'
   'skel/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1/system_actions'
@@ -56,5 +56,5 @@ package() {
   install -Dm644 "$srcdir/skel/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1/custom" \
     "$skel/com.system76.CosmicSettings.Shortcuts/v1/custom"
 
-  install -Dm755 "$srcdir/pharos-apply-defaults" "$pkgdir/usr/bin/pharos-apply-defaults"
+  install -Dm755 "$srcdir/magnetar-apply-defaults" "$pkgdir/usr/bin/magnetar-apply-defaults"
 }

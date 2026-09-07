@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the Pharos ISO package list from CachyOS's Plasma one.
+"""Generate the Magnetar ISO package list from CachyOS's Plasma one.
 
 CachyOS maintains packages_desktop.x86_64 actively — hardware enablement,
 filesystem tools, firmware. Forking that list by hand means silently falling
@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 # Everything CachyOS's Plasma edition pulls that a COSMIC edition must not.
-# alacritty goes too: ghostty is the terminal Pharos ships.
+# alacritty goes too: ghostty is the terminal Magnetar ships.
 DROP = {
     'bluedevil', 'breeze-gtk', 'dolphin', 'kate', 'kcalc', 'kde-gtk-config',
     'kinfocenter', 'konsole', 'kscreen', 'kxkb2locale1', 'partitionmanager',
@@ -58,14 +58,14 @@ greetd
 xdg-desktop-portal
 xdg-desktop-portal-gtk
 
-# --- Pharos ----------------------------------------------------------------
-pharos-repos
-pharos-settings
-pharos-desktop
+# --- Magnetar ----------------------------------------------------------------
+magnetar-repos
+magnetar-settings
+magnetar-desktop
 ghostty
 
 # --- The suite -------------------------------------------------------------
-# -git builds served from [pharos]. They ship on the live ISO rather than
+# -git builds served from [magnetar]. They ship on the live ISO rather than
 # sitting in optdepends: the suite is what the distribution is for, and an
 # ISO that does not show it is an ISO nobody can evaluate.
 jump-git
@@ -95,7 +95,7 @@ def main() -> int:
     stale = sorted(DROP - set(pkgs))
 
     header = (
-        "# Pharos live ISO package list.\n"
+        "# Magnetar live ISO package list.\n"
         "#\n"
         "# GENERATED from CachyOS-Live-ISO's packages_desktop.x86_64 by\n"
         "# tools/gen-iso-packages.py, with the Plasma session removed and COSMIC in\n"
@@ -108,7 +108,7 @@ def main() -> int:
         "#\n\n"
     )
 
-    out = Path(__file__).parent.parent / "iso/overlay/archiso/packages_pharos.x86_64"
+    out = Path(__file__).parent.parent / "iso/overlay/archiso/packages_magnetar.x86_64"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(header + "\n".join(kept) + "\n\n" + COSMIC)
 

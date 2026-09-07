@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# pharos-repo-audit — prove the repository order and locks still hold.
+# magnetar-repo-audit — prove the repository order and locks still hold.
 #
 # Repository order in pacman.conf is a hard priority: pacman takes each package
 # from the first configured repository that carries the name and never looks
@@ -12,7 +12,7 @@
 set -euo pipefail
 
 SELF="${0##*/}"
-OVERRIDES="${PHAROS_REPO_OVERRIDES:-/usr/share/pharos/repo-overrides.txt}"
+OVERRIDES="${MAGNETAR_REPO_OVERRIDES:-/usr/share/magnetar/repo-overrides.txt}"
 fail=0
 warn=0
 

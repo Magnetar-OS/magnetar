@@ -1,4 +1,4 @@
-// Pharos: custom keyboard shortcuts.
+// Magnetar: custom keyboard shortcuts.
 //
 // Only bindings that COSMIC's defaults leave free. Checked against
 // cosmic-settings' shipped `defaults` — Super+space, Super+a..b, f, g, h..m,

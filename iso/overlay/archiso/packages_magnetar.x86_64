@@ -1,4 +1,4 @@
-# Pharos live ISO package list.
+# Magnetar live ISO package list.
 #
 # GENERATED from CachyOS-Live-ISO's packages_desktop.x86_64 by
 # tools/gen-iso-packages.py, with the Plasma session removed and COSMIC in
@@ -224,14 +224,14 @@ greetd
 xdg-desktop-portal
 xdg-desktop-portal-gtk
 
-# --- Pharos ----------------------------------------------------------------
-pharos-repos
-pharos-settings
-pharos-desktop
+# --- Magnetar ----------------------------------------------------------------
+magnetar-repos
+magnetar-settings
+magnetar-desktop
 ghostty
 
 # --- The suite -------------------------------------------------------------
-# -git builds served from [pharos]. They ship on the live ISO rather than
+# -git builds served from [magnetar]. They ship on the live ISO rather than
 # sitting in optdepends: the suite is what the distribution is for, and an
 # ISO that does not show it is an ISO nobody can evaluate.
 jump-git
