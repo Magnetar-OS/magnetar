@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 200" width="520" height="200">
+  <defs>
+    <radialGradient id="c" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF"/><stop offset="45%" stop-color="#9BE8FF"/><stop offset="100%" stop-color="#2AA9E0"/>
+    </radialGradient>
+    <linearGradient id="f" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7B5CFF"/><stop offset="55%" stop-color="#2AA9E0"/><stop offset="100%" stop-color="#7B5CFF"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(100 100) scale(0.62) translate(-128 -128)">
+    <g fill="none" stroke="url(#f)" stroke-linecap="round" transform="rotate(-24 128 128)">
+      <ellipse cx="128" cy="128" rx="34" ry="104" stroke-width="7" opacity="0.95"/>
+      <ellipse cx="128" cy="128" rx="66" ry="104" stroke-width="5" opacity="0.62"/>
+      <ellipse cx="128" cy="128" rx="96" ry="100" stroke-width="3.5" opacity="0.34"/>
+    </g>
+    <circle cx="128" cy="128" r="30" fill="url(#c)"/>
+  </g>
+  <text x="196" y="100" font-family="Inter, DejaVu Sans, sans-serif" font-size="46" font-weight="600" fill="#EAF6FF">Magnetar</text>
+  <text x="198" y="130" font-family="Inter, DejaVu Sans, sans-serif" font-size="16" fill="#8FA6B8">COSMIC on CachyOS</text>
+</svg>

@@ -1,0 +1,48 @@
+# Maintainer: Dominikos Pritis <hey@myroomie.gr>
+#
+# Magnetar's installer identity and package selection.
+#
+# Owns nothing that cachyos-calamares-next owns. The branding lives in a new
+# directory under the branding search path, the module overrides live under
+# /usr/share/magnetar, and magnetar-install assembles a config directory at
+# runtime from CachyOS's plus ours. That matters because the live installer
+# reinstalls cachyos-calamares-next before it runs — anything that overwrote
+# its files would be undone at exactly the wrong moment.
+pkgname=magnetar-calamares
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Magnetar installer branding and package selection for Calamares"
+arch=('any')
+url="https://magnetaros.com"
+license=('GPL-3.0-or-later')
+
+depends=('cachyos-calamares-next' 'python' 'polkit')
+optdepends=('inxi: hardware summary in the install log')
+
+source=()
+sha256sums=()
+
+package() {
+  local brand="$pkgdir/usr/share/calamares/branding/magnetar"
+
+  install -Dm644 "$startdir/branding/branding.desc"   "$brand/branding.desc"
+  install -Dm644 "$startdir/branding/stylesheet.qss"  "$brand/stylesheet.qss"
+  install -Dm644 "$startdir/branding/show.qml"        "$brand/show.qml"
+  install -Dm644 "$startdir/branding/logo.png"        "$brand/logo.png"
+  install -Dm644 "$startdir/branding/icon.png"        "$brand/icon.png"
+  install -Dm644 "$startdir/branding/welcome.png"     "$brand/welcome.png"
+
+  # Module overrides, laid over CachyOS's set at launch.
+  install -Dm644 "$startdir/modules/netinstall.yaml" \
+    "$pkgdir/usr/share/magnetar/calamares/modules/netinstall.yaml"
+  install -Dm644 "$startdir/modules/displaymanager.conf" \
+    "$pkgdir/usr/share/magnetar/calamares/modules/displaymanager.conf"
+
+  install -Dm755 "$startdir/magnetar-install" "$pkgdir/usr/bin/magnetar-install"
+  install -Dm644 "$startdir/com.magnetaros.Install.desktop" \
+    "$pkgdir/usr/share/applications/com.magnetaros.Install.desktop"
+
+  # The installer's icon, also used by the desktop entry.
+  install -Dm644 "$startdir/branding/logo.svg" \
+    "$pkgdir/usr/share/icons/hicolor/scalable/apps/magnetar.svg"
+}

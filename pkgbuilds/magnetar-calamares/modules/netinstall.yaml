@@ -1,0 +1,112 @@
+# Magnetar package selection.
+#
+# Replaces CachyOS's netinstall.yaml, which offers a choice of desktop
+# environments. Magnetar is a COSMIC distribution — offering to install Plasma
+# instead would make it a CachyOS respin with different wallpaper.
+#
+# The hidden/critical groups are the system. The visible ones are genuinely
+# optional and default to what a desktop user wants on first boot.
+
+- name: "Magnetar base (hidden)"
+  description: "Repository configuration, keyrings and hardware detection"
+  hidden: true
+  selected: true
+  critical: true
+  packages:
+     - magnetar-repos
+     - magnetar-settings
+     - magnetar-desktop
+     - cachyos-hooks
+     - cachyos-keyring
+     - cachyos-mirrorlist
+     - cachyos-v3-mirrorlist
+     - cachyos-v4-mirrorlist
+     - cachyos-rate-mirrors
+     - cachyos-settings
+     - chwd
+
+- name: "Kernel (hidden)"
+  description: "CachyOS kernels"
+  hidden: true
+  selected: true
+  critical: true
+  packages:
+     - linux-cachyos
+     - linux-cachyos-headers
+     - linux-firmware
+
+- name: "COSMIC (hidden)"
+  description: "The desktop"
+  hidden: true
+  selected: true
+  critical: true
+  packages:
+     - cosmic-session
+     - cosmic-greeter
+     - cosmic-settings
+     - cosmic-files
+     - cosmic-store
+     - cosmic-terminal
+     - cosmic-text-editor
+     - cosmic-notifications
+     - cosmic-osd
+     - cosmic-idle
+     - cosmic-randr
+     - cosmic-screenshot
+     - cosmic-workspaces
+     - cosmic-app-library
+     - cosmic-applets
+     - cosmic-bg
+     - cosmic-icon-theme
+     - cosmic-sound-theme
+     - cosmic-wallpapers
+     - xdg-desktop-portal-cosmic
+     - xdg-desktop-portal
+     - xdg-desktop-portal-gtk
+     - greetd
+     - ghostty
+
+- name: "Magnetar applications"
+  description: "The COSMIC applications built for Magnetar. jump replaces the stock launcher; the rest are yours to keep or remove."
+  hidden: false
+  selected: true
+  critical: false
+  packages:
+     - jump-git
+     - peek-git
+     - grabit-git
+     - locket-git
+     - envelope-git
+     - circle-git
+     - slate-git
+
+- name: "Gaming"
+  description: "Steam, Proton and the CachyOS gaming stack"
+  hidden: false
+  selected: false
+  critical: false
+  packages:
+     - cachyos-gaming-meta
+     - cachyos-gaming-applications
+
+- name: "Office and media"
+  description: "LibreOffice, an image editor and media playback"
+  hidden: false
+  selected: false
+  critical: false
+  packages:
+     - libreoffice-fresh
+     - gimp
+     - mpv
+
+- name: "Printing"
+  description: "CUPS and driverless printing"
+  hidden: false
+  selected: false
+  critical: false
+  packages:
+     - cups
+     - cups-pdf
+     - system-config-printer
+     - avahi
+     - nss-mdns

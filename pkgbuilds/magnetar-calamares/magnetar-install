@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+#
+# Launch the Magnetar installer.
+#
+# Calamares' configuration is assembled at runtime rather than shipped as a
+# fork of CachyOS's. CachyOS maintains ~60 module configs — partitioning,
+# LUKS, ZFS, mkinitcpio, bootloaders — and forking that set to change three
+# files means inheriting the maintenance of all of them and silently falling
+# behind their fixes.
+#
+# So: take theirs, lay ours over it, patch the two lines in settings.conf that
+# have to change, and run Calamares against the result. Every patch asserts on
+# the text it expects and fails loudly if CachyOS has moved.
+set -euo pipefail
+
+CONFDIR=/run/magnetar-calamares
+OURS=/usr/share/magnetar/calamares
+LOG=/home/liveuser/magnetar-install.log
+
+die() { echo "magnetar-install: $*" >&2; exit 1; }
+
+[[ $(id -u) -ne 0 ]] || die "run as the live user, not root; it escalates on its own"
+
+echo "==> preparing keyrings"
+# Same reasoning as CachyOS's installer: Arch re-signs its keyring often, and a
+# live image whose keyring predates the current signing key fails the install
+# with an error that looks like a network problem.
+sudo rm -rf /etc/pacman.d/gnupg
+sudo pacman -Sy --noconfirm archlinux-keyring cachyos-keyring
+sudo pacman-key --init
+sudo pacman-key --populate archlinux cachyos
+sudo timedatectl set-ntp true || true
+
+echo "==> ensuring Calamares is present"
+sudo pacman -S --needed --noconfirm cachyos-calamares-next
+
+echo "==> assembling configuration"
+sudo rm -rf "$CONFDIR"
+sudo mkdir -p "$CONFDIR"
+sudo cp -a /etc/calamares/. "$CONFDIR/"
+sudo cp /usr/share/calamares/settings_online.conf "$CONFDIR/settings.conf"
+
+# Our module overrides win over CachyOS's.
+sudo cp -a "$OURS/modules/." "$CONFDIR/modules/"
+
+sudo python3 - "$CONFDIR/settings.conf" <<'PY'
+import sys, pathlib, re
+
+p = pathlib.Path(sys.argv[1])
+s = p.read_text()
+problems = []
+
+# 1. Branding.
+if "branding: magnetar" not in s:
+    if "branding: cachyos" not in s:
+        problems.append("no 'branding: cachyos' line to replace")
+    else:
+        s = s.replace("branding: cachyos", "branding: magnetar")
+
+# 2. Drop the desktop chooser. Magnetar installs COSMIC; a step offering
+#    Plasma or GNOME instead would install a system this project does not
+#    build, test or support.
+before = s
+s = re.sub(r"^\s*-\s*packagechooser@desktop\s*$\n", "", s, flags=re.M)
+s = re.sub(r"^- id:\s*desktop\n\s*module:\s*packagechooser\n\s*config:\s*packagechooser_desktop\.conf\n",
+           "", s, flags=re.M)
+if s == before and "packagechooser@desktop" in before:
+    problems.append("could not remove the desktop packagechooser step")
+
+if problems:
+    sys.stderr.write("magnetar-install: CachyOS's settings.conf has changed:\n")
+    for x in problems:
+        sys.stderr.write(f"  - {x}\n")
+    sys.stderr.write("  Update magnetar-install before shipping another ISO.\n")
+    raise SystemExit(1)
+
+p.write_text(s)
+print("    settings.conf: branding -> magnetar, desktop chooser removed")
+PY
+
+mkdir -p "$(dirname "$LOG")"
+{
+  echo "########## Magnetar install log"
+  echo "########## started (UTC): $(date -u '+%F %T')"
+  echo "########## ISO version: $(cat /etc/version-tag 2>/dev/null || echo unknown)"
+  echo "########## firmware: $([ -d /sys/firmware/efi ] && echo UEFI || echo BIOS)"
+  inxi -F 2>/dev/null || true
+} > "$LOG"
+
+echo "==> starting Calamares"
+exec pkexec-wrapper calamares -c "$CONFDIR" -D6 >> "$LOG" 2>&1

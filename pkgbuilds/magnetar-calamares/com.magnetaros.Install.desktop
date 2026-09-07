@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Install Magnetar
+GenericName=System Installer
+Comment=Install Magnetar to this computer
+Exec=magnetar-install
+Icon=magnetar
+Terminal=false
+Categories=System;
+Keywords=install;installer;calamares;setup;

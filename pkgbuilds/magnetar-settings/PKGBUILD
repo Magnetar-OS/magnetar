@@ -33,28 +33,25 @@ optdepends=(
   'locket: Super+Shift+V'
 )
 
-source=(
-  'magnetar-apply-defaults'
-  'skel/.config/cosmic/com.system76.CosmicTheme.Mode/v1/is_dark'
-  'skel/.config/cosmic/com.system76.CosmicTheme.Mode/v1/auto_switch'
-  'skel/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1/system_actions'
-  'skel/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1/custom'
-)
-sha256sums=('SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP')
+# No source=(). See the note in magnetar-repos: makepkg resolves local source
+# entries by basename, and the skel tree is nested on purpose — it is a literal
+# picture of what lands in /etc/skel.
+source=()
+sha256sums=()
 install="$pkgname.install"
 
 package() {
   local skel="$pkgdir/etc/skel/.config/cosmic"
 
-  install -Dm644 "$srcdir/skel/.config/cosmic/com.system76.CosmicTheme.Mode/v1/is_dark" \
+  install -Dm644 "$startdir/skel/.config/cosmic/com.system76.CosmicTheme.Mode/v1/is_dark" \
     "$skel/com.system76.CosmicTheme.Mode/v1/is_dark"
-  install -Dm644 "$srcdir/skel/.config/cosmic/com.system76.CosmicTheme.Mode/v1/auto_switch" \
+  install -Dm644 "$startdir/skel/.config/cosmic/com.system76.CosmicTheme.Mode/v1/auto_switch" \
     "$skel/com.system76.CosmicTheme.Mode/v1/auto_switch"
 
-  install -Dm644 "$srcdir/skel/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1/system_actions" \
+  install -Dm644 "$startdir/skel/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1/system_actions" \
     "$skel/com.system76.CosmicSettings.Shortcuts/v1/system_actions"
-  install -Dm644 "$srcdir/skel/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1/custom" \
+  install -Dm644 "$startdir/skel/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1/custom" \
     "$skel/com.system76.CosmicSettings.Shortcuts/v1/custom"
 
-  install -Dm755 "$srcdir/magnetar-apply-defaults" "$pkgdir/usr/bin/magnetar-apply-defaults"
+  install -Dm755 "$startdir/magnetar-apply-defaults" "$pkgdir/usr/bin/magnetar-apply-defaults"
 }

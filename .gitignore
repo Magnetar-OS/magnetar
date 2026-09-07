@@ -6,3 +6,6 @@ out/
 *.pkg.tar.zst.sig
 src/
 pkg/
+# Local-only build inputs generated from working trees (absolute paths, dirty
+# sources). Never publishable.
+build/pkgbuilds-local/

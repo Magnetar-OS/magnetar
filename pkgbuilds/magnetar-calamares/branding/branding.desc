@@ -1,0 +1,40 @@
+---
+componentName:  magnetar
+
+welcomeStyleCalamares:   false
+welcomeExpandingLogo:    true
+windowExpanding:         normal
+windowSize:              1100px,520px
+windowPlacement:         center
+sidebar:                 widget
+navigation:              widget
+
+strings:
+    productName:         Magnetar
+    shortProductName:    Magnetar
+    version:             rolling
+    shortVersion:        rolling
+    versionedName:       Magnetar
+    shortVersionedName:  Magnetar
+    bootloaderEntryName: Magnetar
+    productUrl:          https://magnetaros.com
+    supportUrl:          https://github.com/entro314-labs/magnetar/issues
+    knownIssuesUrl:      https://github.com/entro314-labs/magnetar/issues
+    releaseNotesUrl:     https://magnetaros.com
+
+images:
+    productLogo:         "logo.png"
+    productIcon:         "icon.png"
+    productWelcome:      "welcome.png"
+
+# Pulled from the logo: the field-line violet and the neutron-star cyan, on the
+# same near-black the COSMIC dark theme uses, so the installer does not look
+# like a different product from the desktop it is installing.
+style:
+   SidebarBackground:        "#1A1D21"
+   SidebarText:              "#EAF6FF"
+   SidebarTextCurrent:       "#0E1114"
+   SidebarBackgroundCurrent: "#2AA9E0"
+
+slideshow:               "show.qml"
+slideshowAPI:            2

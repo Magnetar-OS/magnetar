@@ -15,11 +15,13 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 manifest="$root/pkgbuilds/apps/apps.txt"
 count=0
 
+
 while IFS='|' read -r name desc extradeps extraopt; do
   [[ -n ${name:-} && $name != \#* ]] || continue
 
   dir="$root/pkgbuilds/apps/$name-git"
   mkdir -p "$dir"
+  url="git+https://github.com/entro314-labs/$name.git"
 
   deps="'glib2' 'libxkbcommon' 'systemd-libs' 'zlib'"
   for d in $extradeps; do deps+=" '$d'"; done
@@ -70,7 +72,7 @@ EOF
 
 provides=('$name')
 conflicts=('$name')
-source=("\$pkgname::git+https://github.com/entro314-labs/$name.git")
+source=("\$pkgname::$url")
 sha256sums=('SKIP')
 options=('!lto')  # the workspace sets its own lto profile in Cargo.toml
 
@@ -94,6 +96,16 @@ build() {
   cd "\$srcdir/\$pkgname"
   export RUSTUP_TOOLCHAIN=stable
   export CARGO_TARGET_DIR=target
+
+  # CachyOS ships /etc/makepkg.conf.d/rust.conf with
+  #   RUSTFLAGS="-C opt-level=3 -C target-cpu=native"
+  # which is right for a machine compiling for itself and wrong for a package
+  # other people install: the binary then uses whatever ISA extensions the
+  # build host happened to have and SIGILLs on anything older. Pin the generic
+  # baseline. CPU-optimised builds are what the CachyOS v3/v4 repositories are
+  # for, and a Magnetar user gets them the same way a CachyOS user does.
+  export RUSTFLAGS="-C opt-level=3"
+
   just build-release
 }
 
@@ -101,6 +113,7 @@ check() {
   cd "\$srcdir/\$pkgname"
   export RUSTUP_TOOLCHAIN=stable
   export CARGO_TARGET_DIR=target
+  export RUSTFLAGS="-C opt-level=3"
   # No display, no compositor, no session bus in a build chroot. Tests that
   # need one are expected to be #[ignore]d upstream; if this fails, fix the
   # test rather than deleting check().

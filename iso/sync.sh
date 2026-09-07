@@ -32,6 +32,29 @@ echo "    at $(git -C "$work" rev-parse --short HEAD)"
 echo "==> applying overlay"
 cp -a "$overlay/archiso/." "$work/archiso/"
 
+# Upstream's airootfs is a Plasma live session: its /etc/skel seeds Plasma
+# configuration and it ships plasmalogin settings. An overlay can only add
+# files, so these are deleted explicitly — otherwise magnetar-settings' COSMIC
+# skel arrives via pacstrap and Plasma's dotfiles land on top of it.
+echo "==> removing Plasma leftovers"
+for f in \
+  etc/skel/.config/kded5rc \
+  etc/skel/.config/kscreenlockerrc \
+  etc/skel/.config/kwalletrc \
+  etc/skel/.config/plasma-welcomerc \
+  etc/skel/.config/powerdevilrc \
+  etc/skel/.config/powermanagementprofilesrc \
+  etc/skel/.config/systemd/user/plasma-login-kwin_wayland.service.d \
+  etc/plasmalogin.conf \
+  etc/plasmalogin.conf.d \
+  usr/local/bin/calamares-online.sh
+do
+  if [[ -e $work/archiso/airootfs/$f ]]; then
+    rm -rf "$work/archiso/airootfs/$f"
+    echo "    removed $f"
+  fi
+done
+
 echo "==> patching upstream"
 python3 - "$work" "$DISTRO_ID" "$DISTRO_NAME" "$DISTRO_LABEL" "$DISTRO_REPO_URL" <<'PY'
 import sys, pathlib
@@ -139,6 +162,25 @@ if failed:
           "   UPSTREAM_ISO_REF in branding.env in the same commit.", file=sys.stderr)
     sys.exit(1)
 PY
+
+# --- local package repository -----------------------------------------------
+# The published [magnetar] repository does not exist yet, and even once it does,
+# testing an ISO means testing packages that have not been published. When
+# build/repo holds packages, point the ISO's [magnetar] at them over file://.
+localrepo="$root/build/repo/x86_64"
+if compgen -G "$localrepo/*.pkg.tar.zst" > /dev/null; then
+  echo "==> using local package repository"
+  ( cd "$localrepo" && repo-add -q -R "$DISTRO_ID.db.tar.zst" ./*.pkg.tar.zst >/dev/null )
+  echo "    $(find "$localrepo" -name '*.pkg.tar.zst' | wc -l) packages indexed"
+
+  python3 "$root/tools/point-iso-at-local-repo.py" \
+    "$work/archiso/pacman.conf" "$DISTRO_ID" "$localrepo"
+  echo "    [$DISTRO_ID] -> file://$localrepo (unsigned, test build only)"
+else
+  echo "==> no local packages in $localrepo"
+  echo "    [$DISTRO_ID] still points at $DISTRO_REPO_URL, which is not published."
+  echo "    Build packages first, or the ISO build cannot resolve magnetar-*."
+fi
 
 echo
 echo "==> ready: $work"

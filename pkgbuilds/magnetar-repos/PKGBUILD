@@ -44,26 +44,31 @@ backup=(
 )
 
 install="$pkgname.install"
-source=(
-  'pacman.conf'
-  'repos.d/60-endeavouros.conf'
-  'repos.d/70-chaotic-aur.conf'
-  'repos.d/80-valve.conf'
-  'repos.d/99-local.conf'
-  'repo-audit.sh'
-)
-sha256sums=('SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP')
+
+# No source=(). makepkg resolves local source entries by basename, so a path
+# like 'repos.d/60-endeavouros.conf' is looked for as '60-endeavouros.conf' in
+# the build directory and fails. The nested layout is worth keeping — it mirrors
+# where the files land on disk — so package() reads from $startdir instead.
+# That is sound here: this package is only ever built from this repository,
+# never from a released tarball.
+source=()
+sha256sums=()
 
 package() {
   # The canonical file, for reference and for the installer to copy into
   # place on a fresh system. Deliberately not installed as /etc/pacman.conf:
   # overwriting a live pacman.conf on upgrade would silently revert whatever
   # the machine's owner had changed, including their locks.
-  install -Dm644 "$srcdir/pacman.conf" "$pkgdir/usr/share/magnetar/pacman.conf"
+  install -Dm644 "$startdir/pacman.conf" "$pkgdir/usr/share/magnetar/pacman.conf"
 
   for f in 60-endeavouros 70-chaotic-aur 80-valve 99-local; do
-    install -Dm644 "$srcdir/$f.conf" "$pkgdir/etc/pacman.d/magnetar-repos.d/$f.conf"
+    install -Dm644 "$startdir/repos.d/$f.conf" "$pkgdir/etc/pacman.d/magnetar-repos.d/$f.conf"
   done
 
-  install -Dm755 "$srcdir/repo-audit.sh" "$pkgdir/usr/bin/magnetar-repo-audit"
+  install -Dm755 "$startdir/repo-audit.sh" "$pkgdir/usr/bin/magnetar-repo-audit"
+
+  # The audit defaults to reading this path; without it every CachyOS override
+  # is reported as a policy violation on a working system.
+  install -Dm644 "$startdir/../../tools/repo-overrides.txt" \
+    "$pkgdir/usr/share/magnetar/repo-overrides.txt"
 }

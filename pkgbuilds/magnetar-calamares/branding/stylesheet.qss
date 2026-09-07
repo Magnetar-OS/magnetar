@@ -1,0 +1,38 @@
+/* Magnetar installer.
+ *
+ * Dark to match the COSMIC session being installed — an installer that flashes
+ * light grey before handing over to a dark desktop reads as two products.
+ */
+
+#mainText {
+    color: #EAF6FF;
+    font-weight: 600;
+}
+
+QWidget#sidebarApp {
+    background-color: #1A1D21;
+}
+
+QWidget#sidebarMenuApp {
+    background-color: #1A1D21;
+    color: #EAF6FF;
+}
+
+QPushButton {
+    color: #EAF6FF;
+    background-color: #23272C;
+    border: 1px solid #333A41;
+    border-radius: 4px;
+    padding: 6px 14px;
+}
+
+QPushButton:hover {
+    background-color: #2C3238;
+    border-color: #2AA9E0;
+}
+
+QPushButton:disabled {
+    color: #6A7883;
+    background-color: #1E2226;
+    border-color: #2A3036;
+}

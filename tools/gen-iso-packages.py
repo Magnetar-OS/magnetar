@@ -62,6 +62,7 @@ xdg-desktop-portal-gtk
 magnetar-repos
 magnetar-settings
 magnetar-desktop
+magnetar-calamares
 ghostty
 
 # --- The suite -------------------------------------------------------------
