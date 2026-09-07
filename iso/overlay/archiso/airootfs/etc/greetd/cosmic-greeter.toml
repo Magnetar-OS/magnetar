@@ -1,0 +1,24 @@
+# Pharos live session.
+#
+# Overrides the file cosmic-greeter ships. archiso copies airootfs over the
+# pacstrapped root after installation, so this wins on the live image only —
+# an installed system gets the package's own file back, with no autologin.
+#
+# [initial_session] runs once, at first boot, and drops straight into COSMIC as
+# the live user. [default_session] is the greeter, used for every session after
+# that (log out on the live ISO and you get the greeter, which is also the only
+# way to try it before installing).
+
+[terminal]
+vt = "1"
+
+[general]
+service = "login"
+
+[default_session]
+command = "cosmic-greeter-start"
+user = "cosmic-greeter"
+
+[initial_session]
+command = "cosmic-session"
+user = "liveuser"

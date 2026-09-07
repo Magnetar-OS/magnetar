@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+#
+# pharos-apply-defaults — copy the Pharos COSMIC defaults into the current
+# user's config.
+#
+# /etc/skel only applies at account creation. Existing accounts — including the
+# one the live ISO creates, and yours after an upgrade that adds a default —
+# never see it. This is the bridge, and it is deliberately manual: silently
+# rewriting a running desktop's configuration on package upgrade is not
+# something a distribution should do.
+#
+# Existing files are never overwritten without --force, and --force keeps a
+# timestamped backup.
+set -euo pipefail
+
+SKEL=/etc/skel/.config/cosmic
+DEST="${XDG_CONFIG_HOME:-$HOME/.config}/cosmic"
+force=0
+dry=0
+
+usage() {
+  cat <<USAGE
+usage: ${0##*/} [--force] [--dry-run]
+
+  --force     overwrite existing settings, backing each up to <file>.bak-<date>
+  --dry-run   print what would change and exit
+
+Applies COSMIC defaults from $SKEL
+Log out and back in for shortcut changes to take effect.
+USAGE
+}
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --force) force=1 ;;
+    --dry-run|-n) dry=1 ;;
+    -h|--help) usage; exit 0 ;;
+    *) echo "${0##*/}: unknown option $1" >&2; usage >&2; exit 2 ;;
+  esac
+  shift
+done
+
+[[ -d $SKEL ]] || { echo "${0##*/}: $SKEL not found — is pharos-settings installed?" >&2; exit 2; }
+
+changed=0 skipped=0
+while IFS= read -r -d '' src; do
+  rel="${src#"$SKEL"/}"
+  dst="$DEST/$rel"
+
+  if [[ -e $dst ]] && cmp -s "$src" "$dst"; then
+    continue
+  fi
+
+  if [[ -e $dst && $force -eq 0 ]]; then
+    printf '  skip    %s (exists; --force to replace)\n' "$rel"
+    skipped=$((skipped+1))
+    continue
+  fi
+
+  if (( dry )); then
+    printf '  would  %s %s\n' "$([[ -e $dst ]] && echo replace || echo write)" "$rel"
+    changed=$((changed+1))
+    continue
+  fi
+
+  mkdir -p "$(dirname "$dst")"
+  if [[ -e $dst ]]; then
+    cp -a "$dst" "$dst.bak-$(date +%Y%m%d%H%M%S)"
+    printf '  replace %s (backed up)\n' "$rel"
+  else
+    printf '  write   %s\n' "$rel"
+  fi
+  install -Dm644 "$src" "$dst"
+  changed=$((changed+1))
+done < <(find "$SKEL" -type f -print0)
+
+if (( dry )); then
+  echo "${0##*/}: $changed would change, $skipped left alone"
+  exit 0
+fi
+
+echo "${0##*/}: $changed applied, $skipped left alone"
+(( changed )) && echo "Log out and back in for keyboard shortcuts to take effect."
+exit 0

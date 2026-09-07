@@ -1,0 +1,69 @@
+# Maintainer: Dominikos Pritis <hey@myroomie.gr>
+#
+# Owns the repository configuration and nothing else. Splitting this out from
+# pharos-settings is deliberate: repository order is the part of the system
+# that breaks machines, and it should be inspectable, versioned and revertible
+# on its own.
+#
+# This package does NOT overwrite /etc/pacman.conf on upgrade. It ships the
+# canonical file to /usr/share/pharos/pacman.conf and installs the drop-ins;
+# adopting a new canonical pacman.conf is an explicit act (see the .install).
+pkgname=pharos-repos
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Pacman repository configuration for Pharos: ordered, signed, locked"
+arch=('any')
+url="https://github.com/entro314-labs/pharos"
+license=('GPL-3.0-or-later')
+
+# The keyrings and mirrorlists for every repository this package configures.
+# Listed as hard dependencies so the trust path exists before the repository
+# is ever reachable — a repo whose key arrives after the repo does is a repo
+# that gets used unverified once.
+depends=(
+  'pacman'
+  'cachyos-keyring' 'cachyos-mirrorlist' 'cachyos-v4-mirrorlist'
+  'endeavouros-keyring' 'endeavouros-mirrorlist'
+  'chaotic-keyring' 'chaotic-mirrorlist'
+)
+
+optdepends=(
+  'cachyos-v3-mirrorlist: x86-64-v3 rebuilds, for CPUs without AVX-512'
+)
+
+# Never both. Both ship -x86-64-v3/v4 rebuilds of core and extra; enabled
+# together, repository order decides which build farm supplied each half of
+# your base system. See "Forbidden combinations" in docs/REPOS.md.
+conflicts=('alhp-keyring' 'alhp-mirrorlist')
+
+backup=(
+  'etc/pacman.d/pharos-repos.d/60-endeavouros.conf'
+  'etc/pacman.d/pharos-repos.d/70-chaotic-aur.conf'
+  'etc/pacman.d/pharos-repos.d/80-valve.conf'
+  'etc/pacman.d/pharos-repos.d/99-local.conf'
+)
+
+install="$pkgname.install"
+source=(
+  'pacman.conf'
+  'repos.d/60-endeavouros.conf'
+  'repos.d/70-chaotic-aur.conf'
+  'repos.d/80-valve.conf'
+  'repos.d/99-local.conf'
+  'repo-audit.sh'
+)
+sha256sums=('SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP')
+
+package() {
+  # The canonical file, for reference and for the installer to copy into
+  # place on a fresh system. Deliberately not installed as /etc/pacman.conf:
+  # overwriting a live pacman.conf on upgrade would silently revert whatever
+  # the machine's owner had changed, including their locks.
+  install -Dm644 "$srcdir/pacman.conf" "$pkgdir/usr/share/pharos/pacman.conf"
+
+  for f in 60-endeavouros 70-chaotic-aur 80-valve 99-local; do
+    install -Dm644 "$srcdir/$f.conf" "$pkgdir/etc/pacman.d/pharos-repos.d/$f.conf"
+  done
+
+  install -Dm755 "$srcdir/repo-audit.sh" "$pkgdir/usr/bin/pharos-repo-audit"
+}

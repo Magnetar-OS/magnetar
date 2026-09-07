@@ -1,0 +1,60 @@
+name: ISO
+
+on:
+  push:
+    branches: [main]
+    paths: ['iso/**', 'branding.env', '.github/workflows/iso.yml']
+  pull_request:
+    paths: ['iso/**', 'branding.env']
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build live ISO
+    runs-on: ubuntu-latest
+    container:
+      image: 'archlinux:base-devel'
+      options: --privileged
+    steps:
+      - name: Add the CachyOS repository
+        run: |
+          pacman-key --init
+          pacman-key --recv-keys F3B607488DB35A47 --keyserver keyserver.ubuntu.com
+          pacman-key --lsign-key F3B607488DB35A47
+          sed -i '/^\[core\]$/i[cachyos]\nServer = https://mirror.cachyos.org/repo/$arch/$repo\n' /etc/pacman.conf
+          pacman -Syu --noconfirm archiso cachyos-keyring mkinitcpio-archiso squashfs-tools grub git python
+
+      - uses: actions/checkout@v4
+
+      # sync.sh asserts against exact upstream text and exits non-zero when
+      # CachyOS has moved. That failure is the point of this step: it is the
+      # signal to re-read their file, not a flake to retry.
+      - name: Fetch upstream and apply the Pharos overlay
+        run: ./iso/sync.sh
+
+      - name: Build
+        run: |
+          source branding.env
+          useradd -m builder
+          echo 'builder ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
+          chmod -R a+rw .
+          cd build/iso-src
+          sudo -H -E -u builder ./buildiso.sh -p "$DISTRO_ID" -v -w
+
+      - name: Checksums
+        run: |
+          source branding.env
+          cd "build/iso-src/out/$DISTRO_ID"
+          sha256sum ./*.iso > SHA256SUMS
+          cat SHA256SUMS
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pharos-iso
+          path: |
+            build/iso-src/out/*/*.iso
+            build/iso-src/out/*/SHA256SUMS
+            build/iso-src/out/*/*.pkgs.txt
+          if-no-files-found: error
+          # ISOs are large and this runs on every iso/ change.
+          retention-days: 7

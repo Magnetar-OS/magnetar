@@ -1,0 +1,60 @@
+# Maintainer: Dominikos Pritis <hey@myroomie.gr>
+#
+# The COSMIC session defaults that make a Pharos desktop a Pharos desktop.
+#
+# Everything here goes to /etc/skel. Nothing is installed into
+# /usr/share/cosmic/: those paths are owned by the upstream cosmic-*
+# packages, and writing to them would be a pacman file conflict rather than
+# an override. /etc/skel is the mechanism a distribution actually has.
+#
+# The tradeoff is that /etc/skel applies at account creation only. Existing
+# accounts get the same files through `pharos-apply-defaults`, run by hand.
+# That is on purpose — rewriting a running desktop's configuration during a
+# package upgrade is not a thing this should do.
+pkgname=pharos-settings
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="COSMIC session defaults for Pharos"
+arch=('any')
+url="https://github.com/entro314-labs/pharos"
+license=('GPL-3.0-or-later')
+
+depends=('cosmic-session' 'cosmic-settings-daemon')
+
+# The two commands system_actions redirects to. Hard dependencies, not
+# optional: a system action pointing at a binary that is not installed is a
+# keyboard shortcut that silently does nothing.
+depends+=('jump' 'ghostty')
+
+optdepends=(
+  'envelope: Super+Shift+M'
+  'circle: Super+Shift+C'
+  'slate: Super+Shift+S'
+  'locket: Super+Shift+V'
+)
+
+source=(
+  'pharos-apply-defaults'
+  'skel/.config/cosmic/com.system76.CosmicTheme.Mode/v1/is_dark'
+  'skel/.config/cosmic/com.system76.CosmicTheme.Mode/v1/auto_switch'
+  'skel/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1/system_actions'
+  'skel/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1/custom'
+)
+sha256sums=('SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP')
+install="$pkgname.install"
+
+package() {
+  local skel="$pkgdir/etc/skel/.config/cosmic"
+
+  install -Dm644 "$srcdir/skel/.config/cosmic/com.system76.CosmicTheme.Mode/v1/is_dark" \
+    "$skel/com.system76.CosmicTheme.Mode/v1/is_dark"
+  install -Dm644 "$srcdir/skel/.config/cosmic/com.system76.CosmicTheme.Mode/v1/auto_switch" \
+    "$skel/com.system76.CosmicTheme.Mode/v1/auto_switch"
+
+  install -Dm644 "$srcdir/skel/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1/system_actions" \
+    "$skel/com.system76.CosmicSettings.Shortcuts/v1/system_actions"
+  install -Dm644 "$srcdir/skel/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1/custom" \
+    "$skel/com.system76.CosmicSettings.Shortcuts/v1/custom"
+
+  install -Dm755 "$srcdir/pharos-apply-defaults" "$pkgdir/usr/bin/pharos-apply-defaults"
+}

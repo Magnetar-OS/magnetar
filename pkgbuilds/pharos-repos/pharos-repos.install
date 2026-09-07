@@ -1,0 +1,47 @@
+_canonical=/usr/share/pharos/pacman.conf
+
+post_install() {
+  cat <<'MSG'
+
+Pharos repository configuration installed.
+
+  Drop-ins:      /etc/pacman.d/pharos-repos.d/
+  Canonical:     /usr/share/pharos/pacman.conf
+  Policy:        https://github.com/entro314-labs/pharos/blob/main/docs/REPOS.md
+
+/etc/pacman.conf was NOT modified. On an existing system, review the canonical
+file against yours and adopt it deliberately:
+
+  diff -u /etc/pacman.conf /usr/share/pharos/pacman.conf
+
+Repository ORDER in that file is a hard priority — pacman takes each package
+from the first repo that carries it and ignores newer builds below. Reordering
+the sections is how a system silently gets re-sourced from someone else's
+build farm. Read the policy before you do.
+
+Verify the result at any time with:
+
+  pharos-repo-audit
+
+Valve's jupiter/holo repositories ship commented out and locked
+(Usage = Sync Search). Read 80-valve.conf before enabling them.
+
+MSG
+}
+
+post_upgrade() {
+  # The drop-ins are backup= files, so pacman handles them. The canonical
+  # pacman.conf is the one that can drift, and only the machine's owner can
+  # decide how to merge it.
+  if ! diff -q /etc/pacman.conf "$_canonical" >/dev/null 2>&1; then
+    cat <<MSG
+
+pharos-repos: /etc/pacman.conf differs from the canonical file shipped in this
+version. That may be entirely intentional — your locks live there too. Review
+when convenient:
+
+  diff -u /etc/pacman.conf $_canonical
+
+MSG
+  fi
+}

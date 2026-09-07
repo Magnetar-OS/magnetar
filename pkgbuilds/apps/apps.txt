@@ -1,0 +1,27 @@
+# Pharos application packages, built from git.
+#
+# Format: name|pkgdesc|extra depends (space separated)|extra optdepends (comma separated)
+#
+# These are -git packages because nothing in the suite is tagged yet. When an
+# app cuts a release, linux-release-kit's own pipeline publishes a real
+# versioned package to [entro314labs] and its entry here should be deleted —
+# not kept "just in case". Two packages for one application, from two build
+# paths, is how a user ends up with the older one.
+#
+# locket is deliberately absent. It already has a hand-written PKGBUILD at
+# locket/packaging/arch/PKGBUILD with a dependency list derived from what its
+# binaries actually link against, plus a post-install that explains taking over
+# org.freedesktop.secrets. Regenerating a worse one here would be duplication.
+#
+# Dependencies: the generator emits the libcosmic base set derived from what
+# installed COSMIC applications actually link (glib2, libxkbcommon,
+# systemd-libs, zlib). Anything beyond that is per-app and must come from
+# namcap against a real build, not from reading the source. CI runs namcap and
+# reports what is missing; see .github/workflows/packages.yml.
+
+circle|Contacts for the COSMIC desktop, stored as vCards in a vdir||khard: command-line access to the same vdir,vdirsyncer: CardDAV sync
+slate|Calendar and tasks for the COSMIC desktop||vdirsyncer: CalDAV sync
+envelope|Mail for the COSMIC desktop||gnupg: OpenPGP keyring access
+jump|Spotlight-class launcher for the COSMIC desktop|pop-launcher|
+peek|QuickLook-class file previewer for the COSMIC desktop||
+grabit|Selection actions for Wayland: copy, search, translate, transform, run||

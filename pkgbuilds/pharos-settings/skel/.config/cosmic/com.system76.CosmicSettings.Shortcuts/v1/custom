@@ -1,0 +1,26 @@
+// Pharos: custom keyboard shortcuts.
+//
+// Only bindings that COSMIC's defaults leave free. Checked against
+// cosmic-settings' shipped `defaults` — Super+space, Super+a..b, f, g, h..m,
+// o, q, r, s, t, u..y and the digits are already taken, and silently stealing
+// one of those would break a documented COSMIC shortcut.
+//
+// The launcher is not bound here. Redirecting `Launcher` in `system_actions`
+// already points COSMIC's existing Super+space at jump, which is better than
+// a second binding competing with the first.
+//
+// Action variants: System(..) and Spawn(String), per
+// cosmic-settings-daemon/config/src/shortcuts/action.rs.
+{
+    // The PIM suite. Super+Shift, because the plain-Super letters are spoken
+    // for and applications should not outrank window management.
+    (modifiers: [Super, Shift], key: "m"): Spawn("envelope"),
+    (modifiers: [Super, Shift], key: "c"): Spawn("circle"),
+    (modifiers: [Super, Shift], key: "s"): Spawn("slate"),
+
+    // Secrets.
+    (modifiers: [Super, Shift], key: "v"): Spawn("locket"),
+
+    // Home folder. Super+e is free and this is what every other desktop does.
+    (modifiers: [Super], key: "e"): System(HomeFolder),
+}

@@ -1,0 +1,8 @@
+# iso/sync.sh working tree: upstream clone plus the applied overlay.
+build/
+out/
+*.iso
+*.pkg.tar.zst
+*.pkg.tar.zst.sig
+src/
+pkg/

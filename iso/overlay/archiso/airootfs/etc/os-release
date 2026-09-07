@@ -1,0 +1,14 @@
+NAME="Pharos"
+PRETTY_NAME="Pharos"
+ID=pharos
+# Order matters to anything doing feature detection: Pharos is CachyOS before
+# it is Arch, and tooling that special-cases CachyOS (chwd, the kernel manager,
+# cachyos-hooks) should recognise this system as one.
+ID_LIKE="cachyos arch"
+BUILD_ID=rolling
+ANSI_COLOR="38;2;23;147;209"
+HOME_URL="https://github.com/entro314-labs/pharos"
+DOCUMENTATION_URL="https://github.com/entro314-labs/pharos/blob/main/docs"
+SUPPORT_URL="https://github.com/entro314-labs/pharos/issues"
+BUG_REPORT_URL="https://github.com/entro314-labs/pharos/issues"
+LOGO=pharos

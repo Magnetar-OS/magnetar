@@ -1,0 +1,77 @@
+# Deliberate shadowing. Every entry here is a repository above Arch that is
+# ALLOWED to be the source for a package Arch also carries.
+#
+# Format: repo:package, or repo:* for a repository whose entire purpose is to
+# shadow Arch.
+#
+# Adding a line is a decision that part of the base system comes from that
+# repository. It is not a way to quiet the audit. The list below was generated
+# by running tools/repo-audit.sh against a live CachyOS install and recording
+# what CachyOS actually overrides — not from guessing, and not from CachyOS's
+# documentation, which does not enumerate it.
+#
+# Regenerate after a CachyOS repo change with:
+#   tools/repo-audit.sh | awk '$1=="FAIL" && $4=="cachyos" {print "cachyos:"$2}'
+
+# --- The optimised rebuilds ------------------------------------------------
+# These exist to replace core/extra with x86-64-v3/v4 builds. Shadowing every
+# name they carry is the entire feature.
+cachyos-znver4:*
+cachyos-core-znver4:*
+cachyos-extra-znver4:*
+
+# --- CachyOS proper --------------------------------------------------------
+# Verified against cachyos 2026-09-07. Listed individually rather than with a
+# wildcard so the audit reports it the day this set grows — a new name here is
+# CachyOS taking over a part of the base system, and that is worth noticing.
+
+# Boot and early userspace
+cachyos:mkinitcpio
+cachyos:limine
+cachyos:amd-ucode
+cachyos:archlinux-keyring
+# pacman itself — CachyOS carries its own build.
+cachyos:pacman
+
+# Firmware — CachyOS ships a split, more current linux-firmware set
+cachyos:linux-firmware
+cachyos:linux-firmware-amdgpu
+cachyos:linux-firmware-atheros
+cachyos:linux-firmware-broadcom
+cachyos:linux-firmware-cirrus
+cachyos:linux-firmware-intel
+cachyos:linux-firmware-liquidio
+cachyos:linux-firmware-marvell
+cachyos:linux-firmware-mediatek
+cachyos:linux-firmware-mellanox
+cachyos:linux-firmware-nfp
+cachyos:linux-firmware-nvidia
+cachyos:linux-firmware-other
+cachyos:linux-firmware-qcom
+cachyos:linux-firmware-qlogic
+cachyos:linux-firmware-radeon
+cachyos:linux-firmware-realtek
+cachyos:linux-firmware-whence
+cachyos:broadcom-wl-dkms
+cachyos:dkms
+
+# Power and hardware
+cachyos:power-profiles-daemon
+cachyos:intel-lpmd
+
+# Tooling
+cachyos:rate-mirrors
+cachyos:pacutils
+cachyos:sudo-rs
+cachyos:umu-launcher
+cachyos:python-dataclasses-json
+cachyos:voa-verifiers-arch
+cachyos:lib32-freeglut
+
+# Desktop — NOT inherited by Pharos.
+# plasma-login-manager and dms-shell are CachyOS's Plasma session pieces.
+# Pharos is a COSMIC distribution and installs neither, so these are recorded
+# for completeness and should never appear in an installed Pharos system.
+# If the audit ever reports one as installed, something pulled in Plasma.
+cachyos:plasma-login-manager
+cachyos:dms-shell

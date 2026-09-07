@@ -1,0 +1,110 @@
+name: Packages
+
+on:
+  push:
+    branches: [main]
+    paths: ['pkgbuilds/**', 'tools/**', '.github/workflows/packages.yml']
+  pull_request:
+    paths: ['pkgbuilds/**', 'tools/**']
+  schedule:
+    # The suite is packaged from git. Nightly rebuilds keep [pharos] tracking
+    # the app repositories; without this the ISO ships whatever was current
+    # the last time somebody pushed to this repo.
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+jobs:
+  # Cheap checks first: a drifted generator invalidates everything below it.
+  drift:
+    name: Generated files match their generators
+    runs-on: ubuntu-latest
+    container: { image: 'archlinux:base-devel' }
+    steps:
+      - run: pacman -Syu --noconfirm git python
+      - uses: actions/checkout@v4
+
+      - name: App PKGBUILDs match apps.txt
+        run: |
+          ./tools/gen-app-pkgbuilds.sh
+          git diff --exit-code -- pkgbuilds/apps \
+            || { echo "::error::pkgbuilds/apps is stale. Run tools/gen-app-pkgbuilds.sh and commit."; exit 1; }
+
+      - name: ISO package list matches upstream
+        run: |
+          source branding.env
+          git clone --depth 1 --branch "$UPSTREAM_ISO_REF" "$UPSTREAM_ISO_REPO" /tmp/up
+          python3 tools/gen-iso-packages.py /tmp/up/archiso/packages_desktop.x86_64
+          git diff --exit-code -- iso/overlay/archiso/packages_pharos.x86_64 \
+            || { echo "::error::CachyOS changed packages_desktop.x86_64. Re-run tools/gen-iso-packages.py, review the diff, and commit."; exit 1; }
+
+  build:
+    name: ${{ matrix.pkg }}
+    needs: drift
+    runs-on: ubuntu-latest
+    container:
+      image: 'archlinux:base-devel'
+      options: --privileged
+    strategy:
+      fail-fast: false
+      matrix:
+        pkg:
+          - pharos-repos
+          - pharos-settings
+          - pharos-desktop
+          - apps/circle-git
+          - apps/slate-git
+          - apps/envelope-git
+          - apps/jump-git
+          - apps/peek-git
+          - apps/grabit-git
+    steps:
+      - name: Add the CachyOS repository
+        run: |
+          pacman-key --init
+          pacman-key --recv-keys F3B607488DB35A47 --keyserver keyserver.ubuntu.com
+          pacman-key --lsign-key F3B607488DB35A47
+          sed -i '/^\[core\]$/i[cachyos]\nServer = https://mirror.cachyos.org/repo/$arch/$repo\n' /etc/pacman.conf
+          pacman -Syu --noconfirm git namcap cachyos-keyring
+
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: |
+          useradd -m builder
+          echo 'builder ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
+          chown -R builder:builder .
+          sudo -u builder makepkg -sf --noconfirm --needed -D "pkgbuilds/${{ matrix.pkg }}"
+
+      - name: namcap
+        # Reported, not enforced. The generated PKGBUILDs carry only the
+        # libcosmic base dependency set on purpose; namcap against a real
+        # build is where the per-app additions come from. Failing the build on
+        # it would just mean nobody sees the list.
+        continue-on-error: true
+        run: namcap pkgbuilds/${{ matrix.pkg }}/*.pkg.tar.zst
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pkg-${{ strategy.job-index }}
+          path: pkgbuilds/${{ matrix.pkg }}/*.pkg.tar.zst
+          if-no-files-found: error
+
+  # Publishing is deliberately a separate, manual-approval job: these packages
+  # land in a repository that other people's machines upgrade from.
+  publish:
+    name: Publish to [pharos]
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment: pharos-repo
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: dist, merge-multiple: true }
+      - name: Not yet wired
+        run: |
+          echo "::notice::Built $(ls dist | wc -l) packages."
+          ls -la dist
+          echo "::error::Publishing is not wired yet — the pharos-repo Pages repository does not exist."
+          echo "Mirror arch-repo's layout and reuse linux-release-kit's arch-repo.yml:"
+          echo "  https://github.com/entro314-labs/linux-release-kit/blob/main/.github/workflows/arch-repo.yml"
+          exit 1

@@ -1,0 +1,89 @@
+# Maintainer: Dominikos Pritis <hey@myroomie.gr>
+#
+# The meta package that defines a Pharos desktop. Installing this on a stock
+# CachyOS machine turns it into Pharos; removing it leaves the underlying
+# CachyOS intact.
+#
+# depends vs optdepends here is a real distinction, not a formality:
+#   depends    — remove it and this is no longer Pharos.
+#   optdepends — the suite. Genuinely optional, and each one is a WIP app that
+#                should not be able to block the desktop from installing.
+pkgname=pharos-desktop
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Pharos: COSMIC desktop on CachyOS"
+arch=('any')
+url="https://github.com/entro314-labs/pharos"
+license=('GPL-3.0-or-later')
+
+depends=(
+  # Repository configuration first — everything below is reachable because of
+  # it, and it carries the keyrings.
+  'pharos-repos'
+  'pharos-settings'
+
+  # COSMIC. cosmic-session pulls the compositor, panel and settings daemon;
+  # the rest are named because a desktop without them is broken, not minimal.
+  'cosmic-session'
+  'cosmic-greeter'
+  'cosmic-settings'
+  'cosmic-files'
+  'cosmic-store'
+  'cosmic-notifications'
+  'cosmic-osd'
+  'cosmic-idle'
+  'cosmic-randr'
+  'cosmic-screenshot'
+  'cosmic-workspaces'
+  'cosmic-app-library'
+  'cosmic-applets'
+  'cosmic-bg'
+  'cosmic-icon-theme'
+  'cosmic-sound-theme'
+  'cosmic-wallpapers'
+  'xdg-desktop-portal-cosmic'
+
+  # The portal stack. xdg-desktop-portal-cosmic is a backend; without the
+  # frontend and gtk fallback, file pickers in non-COSMIC apps fail.
+  'xdg-desktop-portal'
+  'xdg-desktop-portal-gtk'
+  'xdg-user-dirs'
+
+  # Session plumbing.
+  'greetd'
+  'networkmanager'
+  'pipewire' 'pipewire-alsa' 'pipewire-pulse' 'wireplumber'
+  'polkit'
+  'power-profiles-daemon'
+
+  # CachyOS hardware and tuning, kept rather than replaced. Rebuilding any of
+  # this is the shipcopter — CachyOS already does it better than we would.
+  'chwd'
+  'cachyos-settings'
+  'cachyos-hooks'
+
+  # The terminal system_actions points at. A system action aimed at a missing
+  # binary is a shortcut that silently does nothing.
+  'ghostty'
+)
+
+optdepends=(
+  # The suite. Every one is pre-1.0 and unreleased; none of them should be
+  # able to block a desktop install.
+  'jump: Spotlight-class launcher (bound to Super+space by pharos-settings)'
+  'peek: QuickLook-class file previewer'
+  'grabit: selection actions over any Wayland surface'
+  'locket: password manager, Secret Service and SSH agent'
+  'envelope: mail'
+  'circle: contacts'
+  'slate: calendar and tasks'
+
+  # Practical extras, not opinions.
+  'cachyos-gaming-meta: Proton, Wine and the gaming stack'
+  'cachyos-kernel-manager: switch kernels without editing bootloader config'
+  'flatpak: applications COSMIC Store installs by default'
+)
+
+# jump is a hard dependency of pharos-settings, which redirects the Launcher
+# system action to it. It appears in optdepends above for discoverability;
+# pacman resolves it through pharos-settings either way.
