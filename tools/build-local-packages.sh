@@ -36,7 +36,7 @@ _already() {
 }
 
 _build() {
-  local dir="$1" name="$2"
+  local dir="$1" name="$2" mode="${3:-sync}"
   if [[ -n $only && $name != "$only" ]]; then return 0; fi
 
   if (( ! force )) && _already "$name"; then
@@ -47,7 +47,15 @@ _build() {
 
   printf '  %-18s building… ' "$name"
   local log="$root/build/log-$name.txt"
-  if (cd "$dir" && makepkg -sf --noconfirm --nocheck --needed >"$log" 2>&1); then
+
+  # --nodeps for the configuration packages. They have no build step, so their
+  # dependencies matter only at install time — and resolving them here would
+  # both fail (jump and magnetar-* are what we are building) and install
+  # things like Calamares onto the build machine as a side effect.
+  local flags=(-f --noconfirm --nocheck)
+  [[ $mode == sync ]] && flags+=(-s --needed) || flags+=(--nodeps)
+
+  if (cd "$dir" && makepkg "${flags[@]}" >"$log" 2>&1); then
     cp "$dir"/*.pkg.tar.zst "$repo/" 2>/dev/null
     echo "ok"
     echo "$name OK" >> "$status"
@@ -60,7 +68,7 @@ _build() {
 
 echo "==> configuration packages"
 for p in magnetar-repos magnetar-settings magnetar-desktop magnetar-calamares; do
-  _build "$root/pkgbuilds/$p" "$p"
+  _build "$root/pkgbuilds/$p" "$p" nodeps
 done
 
 echo "==> applications (local working trees)"
