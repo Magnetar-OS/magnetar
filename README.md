@@ -47,13 +47,21 @@ the alternative is an ISO that is quietly wrong.
 ## Building
 
 ```sh
-# Live ISO
-./iso/sync.sh
+# Packages first — the ISO installs them, so nothing works without this.
+tools/gen-app-pkgbuilds-local.sh ~/GitHub   # until the suite is pushed
+tools/build-local-packages.sh               # idempotent; --force to rebuild
+
+# Confirm every name in the ISO list resolves, before mkarchiso spends an hour
+# discovering otherwise.
+tools/check-iso-packages.sh
+
+# ISO
+./iso/sync.sh                               # picks up build/repo automatically
 cd build/iso-src && sudo ./buildiso.sh -p magnetar -v -w
 # -> build/iso-src/out/magnetar/
 
-# A package
-makepkg -sf -D pkgbuilds/magnetar-settings
+# Boot it
+tools/test-vm.sh --install
 
 # Check the repository policy still holds
 tools/repo-audit.sh
@@ -73,27 +81,46 @@ tools/regen-system-actions.sh                                            # after
 
 ## State
 
-Scaffolded and verified as far as it can be without a build host. Verified by
-running: the overlay applies cleanly to upstream at `4937780` and is
-idempotent, the audit runs against a live 80-repository system and reports true
-findings, all PKGBUILDs parse, and every COSMIC config format used here was
-read off a running COSMIC 1.7.0 rather than assumed.
+Verified by running, on a CachyOS host:
 
-Not yet done, in the order it blocks things:
+- The overlay applies to CachyOS-Live-ISO cleanly and is idempotent. Eight
+  exact-match patches, each of which fails by name if upstream moves.
+- `magnetar-repos`, `magnetar-settings`, `magnetar-desktop` and
+  `magnetar-calamares` build and contain what they should.
+- `tools/repo-audit.sh` runs against a live 80-repository system and reports
+  true findings; the CachyOS override list was generated from that run.
+- Every COSMIC config format was read off a running COSMIC 1.7.0. The
+  `system_actions` redirect and the `Spawn` action variant were confirmed
+  against cosmic-comp's strings and cosmic-settings-daemon's `action.rs`.
 
-1. **`magnetar-repo` does not exist.** The `[magnetar]` repository is configured
-   everywhere and served nowhere, so no ISO can build. Mirror `arch-repo`'s
-   layout and reuse `linux-release-kit`'s `arch-repo.yml`. `packages.yml`
-   builds the packages today and fails at the publish step, on purpose.
-2. **No ISO has been built.** Everything upstream of `mkarchiso` is verified;
-   `mkarchiso` itself has not run. Expect the first build to surface missing
-   packages.
-3. **Calamares is unbranded and untested under COSMIC.** `cachyos-calamares-next`
-   is in the package list and will come up branded as CachyOS, if it comes up.
-4. **Per-app dependencies are the libcosmic base set only.** namcap runs in CI
-   and reports the rest; the additions have not been made.
-5. **No keyring package.** `[magnetar]` is `SigLevel = Required` against a key
-   that has no `magnetar-keyring` to distribute it.
+Three things this turned up that were not obvious:
+
+1. **`-C target-cpu=native`.** CachyOS ships `/etc/makepkg.conf.d/rust.conf`
+   setting it. Correct for a machine building for itself; for a package other
+   people install it produces a binary that SIGILLs on any older CPU. The app
+   PKGBUILDs pin a generic baseline.
+2. **The suite cannot be packaged from git yet.** `peek` and `grabit` have no
+   commits; `circle`, `slate` and `envelope` depend on `cosmic-pim` by relative
+   path, so no single-repo clone resolves. Hence
+   `tools/gen-app-pkgbuilds-local.sh`, which stages working trees with their
+   siblings — a development path, not a shipping one.
+3. **makepkg resolves local `source=` entries by basename**, so nested paths
+   never worked. The config packages read from `$startdir` instead.
+
+Not done yet, in the order it blocks things:
+
+1. **The suite is not on GitHub.** All seven repositories 404. Until they are
+   pushed, the committed PKGBUILDs cannot build and only the local path works.
+2. **`magnetar-repo` does not exist**, so `[magnetar]` is configured and
+   unserved. `iso/sync.sh` falls back to a local directory over `file://` with
+   signatures relaxed *in the build tree only*.
+3. **No `magnetar-keyring`.** `[magnetar]` requires signatures against a key
+   nothing distributes.
+4. **Calamares is branded but untested.** The config assembly asserts on
+   CachyOS's text; whether it renders correctly under cosmic-comp is unknown
+   until an ISO boots.
+5. **Per-app dependencies are the libcosmic base set only.** namcap runs in CI
+   and reports the rest.
 
 ## Licence
 
