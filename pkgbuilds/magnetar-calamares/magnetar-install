@@ -25,7 +25,17 @@ echo "==> preparing keyrings"
 # Same reasoning as CachyOS's installer: Arch re-signs its keyring often, and a
 # live image whose keyring predates the current signing key fails the install
 # with an error that looks like a network problem.
-sudo rm -rf /etc/pacman.d/gnupg
+#
+# On the live image /etc/pacman.d/gnupg is a tmpfs mount (archiso's
+# etc-pacman.d-gnupg.mount), so it cannot be removed — `rm -rf` returns
+# "Device or resource busy". CachyOS's script issues the same rm and survives
+# only because it does not set -e. Re-initialising in place works fine, so
+# check rather than delete blindly.
+if mountpoint -q /etc/pacman.d/gnupg; then
+  echo "    keyring directory is a mount; re-initialising in place"
+else
+  sudo rm -rf /etc/pacman.d/gnupg
+fi
 sudo pacman -Sy --noconfirm archlinux-keyring cachyos-keyring
 sudo pacman-key --init
 sudo pacman-key --populate archlinux cachyos

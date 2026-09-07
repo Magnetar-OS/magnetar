@@ -153,6 +153,23 @@ patch("util-iso.sh",
       '    else',
       "prepare_profile builds the magnetar profile")
 
+# --- util-iso.sh: two more hardcoded "cachyos" strings -----------------------
+# The build otherwise succeeds and then fails on its last line. mkarchiso names
+# the image from profiledef's iso_name, which is now "magnetar", but upstream's
+# rename step still looks for "cachyos-<date>-x86_64.iso" and dies. The ISO is
+# fine at that point; the checksum step after it never runs.
+patch("util-iso.sh",
+      '    mv "$outFolder/$_profile/cachyos-$(date',
+      '    mv "$outFolder/$_profile/${iso_name}-$(date',
+      "the final rename uses iso_name, not a literal")
+
+# gen_iso_fn builds the published filename. Left alone it produces
+# "cachyos-magnetar-linux-260908.iso", which names the wrong distribution first.
+patch("util-iso.sh",
+      '    vars+=("cachyos")\n',
+      f'    vars+=("{did}")\n',
+      "generated filenames start with the distribution's own name")
+
 # --- profiledef.sh: drop permissions for a file we deleted -------------------
 # mkarchiso warns for every file_permissions entry whose file is missing.
 # calamares-online.sh is removed above — magnetar-install replaces it — so the
