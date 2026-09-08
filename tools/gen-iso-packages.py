@@ -71,6 +71,20 @@ magnetar-desktop
 magnetar-calamares
 ghostty
 
+# --- Adopted from the Pop!_OS survey ---------------------------------------
+# See docs/POP-OS-ADOPTION.md for why these three and not the rest.
+#
+# cutecosmic: Qt platform theme for COSMIC. Calamares is Qt and is the first
+# thing anyone sees; without this it renders as a generic Qt application on a
+# COSMIC desktop and the installer branding is wasted.
+cutecosmic
+# popsicle: System76's USB flasher. We produce a 3.1 GB ISO and shipped nothing
+# to write it with.
+popsicle
+# fwupd: firmware updates. Pop ships firmware-manager; this is the cross-distro
+# equivalent and we had no firmware update path at all.
+fwupd
+
 # --- The suite -------------------------------------------------------------
 # -git builds served from [magnetar]. They ship on the live ISO rather than
 # sitting in optdepends: the suite is what the distribution is for, and an

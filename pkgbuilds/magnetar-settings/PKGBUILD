@@ -26,6 +26,9 @@ depends=('cosmic-session' 'cosmic-settings-daemon')
 # keyboard shortcut that silently does nothing.
 depends+=('jump' 'ghostty')
 
+# Qt theming is declared here because this package is what selects it.
+optdepends+=('cutecosmic: the Qt platform theme QT_QPA_PLATFORMTHEME points at')
+
 optdepends=(
   'envelope: Super+Shift+M'
   'circle: Super+Shift+C'
@@ -54,4 +57,9 @@ package() {
     "$skel/com.system76.CosmicSettings.Shortcuts/v1/custom"
 
   install -Dm755 "$startdir/magnetar-apply-defaults" "$pkgdir/usr/bin/magnetar-apply-defaults"
+
+  # /usr/lib, not /etc: this is the distribution's default, and leaving /etc
+  # free means an admin can override it without a pacnew conflict.
+  install -Dm644 "$startdir/environment.d/90-magnetar-qt.conf" \
+    "$pkgdir/usr/lib/environment.d/90-magnetar-qt.conf"
 }

@@ -57,7 +57,14 @@ echo "signed=$signed already-signed=$skipped"
 # -s signs the database itself; -v makes repo-add verify each package's
 # signature as it indexes, so a bad signature fails here rather than on a
 # user's machine.
+#
+# The old database and its signature go first. repo-add -v verifies what it
+# finds, and a database rebuilt from a changed package set no longer matches
+# the signature sitting next to it — so leaving them in place fails the run
+# with "BAD signature" on the database itself, which reads like key trouble
+# and is not.
 echo "==> rebuilding the database, signed"
+rm -f "$repo/$DISTRO_REPO_NAME.db"* "$repo/$DISTRO_REPO_NAME.files"*
 ( cd "$repo"
   printf '%s\n' "$MAGNETAR_SIGNING_PASSPHRASE" \
     | GPGKEY="$fpr" repo-add -q -R -s -v -k "$fpr" \

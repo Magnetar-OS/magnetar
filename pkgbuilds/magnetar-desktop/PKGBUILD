@@ -65,6 +65,14 @@ depends=(
   # The terminal system_actions points at. A system action aimed at a missing
   # binary is a shortcut that silently does nothing.
   'ghostty'
+
+  # Qt applications on a COSMIC desktop. Calamares is Qt, and so are several
+  # CachyOS tools; without a platform theme they ignore the session's colours,
+  # fonts and dark mode entirely. See docs/POP-OS-ADOPTION.md.
+  'cutecosmic'
+
+  # Firmware updates. There was no path for these at all before.
+  'fwupd'
 )
 
 optdepends=(
@@ -82,6 +90,7 @@ optdepends=(
   'cachyos-gaming-meta: Proton, Wine and the gaming stack'
   'cachyos-kernel-manager: switch kernels without editing bootloader config'
   'flatpak: applications COSMIC Store installs by default'
+  'popsicle: write a Magnetar ISO to a USB stick'
 )
 
 # jump is a hard dependency of magnetar-settings, which redirects the Launcher

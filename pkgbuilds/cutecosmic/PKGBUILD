@@ -1,0 +1,67 @@
+# Maintainer: Dominikos Pritis <hey@myroomie.gr>
+#
+# Qt platform theme for COSMIC. Relays dark mode, colours, fonts, icon theme
+# and file dialogs from COSMIC settings into Qt applications.
+#
+# Magnetar ships Qt applications — cachyos-calamares-next is the installer, and
+# it is the first thing anyone sees. Without this it renders as a generic Qt
+# application against a COSMIC desktop, which undoes the point of branding it.
+#
+# Not a System76 project: an independent one (IgKh/cutecosmic), unaffiliated
+# with and unendorsed by System76.
+#
+# THE VERSIONED qt6-base DEPENDENCY IS DELIBERATE. Upstream is explicit that
+# CuteCosmic "makes extensive use of private Qt APIs that are outside the scope
+# of Qt's normal compatibility guarantees", and that it MUST be rebuilt when the
+# Qt it was built against changes — including patch releases. Private API drift
+# does not announce itself; it shows up as misrendering or a crash inside a Qt
+# application, which on this distribution could be the installer.
+#
+# So the dependency is pinned to the exact qt6-base this was built against.
+# `pacman -Syu` will then refuse to upgrade Qt until a matching cutecosmic is
+# published, which is loud and fixable. The alternative — an unpinned
+# dependency — is silent breakage in someone else's Calamares session.
+#
+# Rebuilding is the maintenance cost of shipping this. On every qt6-base bump:
+#   1. rebuild this package against the new Qt
+#   2. update the pinned version below
+#   3. publish both together
+pkgname=cutecosmic
+pkgver=0.2.0
+pkgrel=1
+pkgdesc="Qt platform theme for the COSMIC desktop"
+arch=('x86_64')
+url="https://github.com/IgKh/cutecosmic"
+license=('GPL-3.0-or-later')
+
+depends=(
+  'qt6-base=6.11.2-3'
+  'qt6-declarative'
+)
+makedepends=('cargo' 'cmake' 'git')
+
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('2bbc0f4dbb0e16ccbbf77dc53fea99ff56abf32621d831198bb3744fef01c7aa')
+
+prepare() {
+  cd "$pkgname-$pkgver/bindings"
+  export RUSTUP_TOOLCHAIN=stable
+  cargo fetch --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
+build() {
+  export RUSTUP_TOOLCHAIN=stable
+  # CachyOS's /etc/makepkg.conf.d/rust.conf sets -C target-cpu=native, which
+  # would make this SIGILL on any CPU older than the build host.
+  export RUSTFLAGS="-C opt-level=3"
+  cmake -B build -S "$pkgname-$pkgver" \
+    -DCMAKE_BUILD_TYPE='RelWithDebInfo' \
+    -DCMAKE_INSTALL_PREFIX='/usr' \
+    -Wno-dev
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+  install -Dm644 "$pkgname-$pkgver/README.md" -t "$pkgdir/usr/share/doc/$pkgname/"
+}
