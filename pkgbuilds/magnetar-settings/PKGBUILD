@@ -20,6 +20,7 @@ url="https://github.com/Magnetar-OS/magnetar"
 license=('GPL-3.0-or-later')
 
 depends=('cosmic-session' 'cosmic-settings-daemon')
+optdepends=('fastfetch: system summary, with the Magnetar logo')
 
 # The two commands system_actions redirects to. Hard dependencies, not
 # optional: a system action pointing at a binary that is not installed is a
@@ -55,6 +56,25 @@ package() {
     "$skel/com.system76.CosmicSettings.Shortcuts/v1/system_actions"
   install -Dm644 "$startdir/skel/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1/custom" \
     "$skel/com.system76.CosmicSettings.Shortcuts/v1/custom"
+
+  install -Dm644 "$startdir/skel/.config/cosmic/com.system76.CosmicBackground/v1/all" \
+    "$skel/com.system76.CosmicBackground/v1/all"
+  install -Dm644 "$startdir/skel/.config/cosmic/com.system76.CosmicBackground/v1/same-on-all" \
+    "$skel/com.system76.CosmicBackground/v1/same-on-all"
+
+  # The wallpaper the config above points at. Deliberately dark and quiet: a
+  # desktop background sits behind window content all day, and the COSMIC
+  # default (a full-colour Orion nebula photograph) competes with it.
+  install -Dm644 "$startdir/wallpaper/magnetar.png" \
+    "$pkgdir/usr/share/backgrounds/magnetar/magnetar.png"
+  install -Dm644 "$startdir/wallpaper/magnetar.svg" \
+    "$pkgdir/usr/share/backgrounds/magnetar/magnetar.svg"
+
+  # fastfetch: our logo, and the config that points at it.
+  install -Dm644 "$startdir/fastfetch/magnetar-logo.txt" \
+    "$pkgdir/usr/share/magnetar/logo.txt"
+  install -Dm644 "$startdir/fastfetch/config.jsonc" \
+    "$skel/../fastfetch/config.jsonc"
 
   install -Dm755 "$startdir/magnetar-apply-defaults" "$pkgdir/usr/bin/magnetar-apply-defaults"
 

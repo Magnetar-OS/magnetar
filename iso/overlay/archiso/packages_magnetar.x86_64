@@ -7,7 +7,7 @@
 # list regularly, and losing one silently is how an ISO stops booting on
 # somebody's machine.
 #
-# Dropped from upstream (23): alacritty bluedevil breeze-gtk cachyos-hello cachyos-kde-settings dolphin kate kcalc kde-gtk-config kinfocenter konsole kscreen kxkb2locale1 partitionmanager plasma-desktop plasma-integration plasma-login-manager plasma-nm plasma-pa plasma-thunderbolt plasma-workspace polkit-kde-agent spectacle
+# Dropped from upstream (24): alacritty bluedevil breeze-gtk cachyos-cli-installer-new cachyos-hello cachyos-kde-settings dolphin kate kcalc kde-gtk-config kinfocenter konsole kscreen kxkb2locale1 partitionmanager plasma-desktop plasma-integration plasma-login-manager plasma-nm plasma-pa plasma-thunderbolt plasma-workspace polkit-kde-agent spectacle
 #
 
 alsa-utils
@@ -25,7 +25,6 @@ brltty
 btrfs-progs
 cachy-chroot
 cachyos-calamares-next
-cachyos-cli-installer-new
 cachyos-fish-config
 cachyos-hooks
 cachyos-keyring

@@ -21,7 +21,13 @@ overlay="$root/iso/overlay"
 echo "==> upstream: $UPSTREAM_ISO_REPO @ $UPSTREAM_ISO_REF"
 if [[ -d $work/.git ]]; then
   git -C "$work" fetch --depth 1 origin "$UPSTREAM_ISO_REF"
-  git -C "$work" checkout -q FETCH_HEAD
+  # Hard reset, not checkout. The patches below rewrite tracked files, and a
+  # plain checkout leaves those edits in place — so when OUR replacement text
+  # changes (an org rename, say), the patch matches neither the pristine text
+  # nor the already-applied text, and sync fails on a tree it created itself.
+  # Resetting to upstream every run makes this idempotent from any state.
+  git -C "$work" reset -q --hard FETCH_HEAD
+  git -C "$work" clean -qfd
 else
   rm -rf "$work"
   mkdir -p "$(dirname "$work")"
@@ -54,6 +60,33 @@ do
     rm -rf "$work/archiso/airootfs/$f"
     echo "    removed $f"
   fi
+done
+
+# --- rebrand the boot menus and the motd -------------------------------------
+# Derived from upstream with a substitution rather than forked. These files
+# gain entries as CachyOS adds kernels and boot options, and a hand-maintained
+# copy would quietly stop matching what the ISO can actually boot.
+#
+# Visible strings only. CACHYOS_VERSION inside grub.cfg stays as it is: it is a
+# build-internal variable that change_grub_version() seds by name, renaming it
+# would mean patching that function too, and nobody ever sees it.
+echo "==> rebranding boot menus"
+for f in "$work/archiso/grub/grub.cfg" "$work"/archiso/syslinux/*.cfg; do
+  [[ -f $f ]] || continue
+  before=$(md5sum "$f" | cut -d' ' -f1)
+  sed -i \
+    -e "s|Welcome to CachyOS|Welcome to $DISTRO_NAME|g" \
+    -e "s|menuentry \"CachyOS\"|menuentry \"$DISTRO_NAME\"|g" \
+    -e "s|menuentry \"CachyOS |menuentry \"$DISTRO_NAME |g" \
+    -e "s|MENU TITLE CachyOS|MENU TITLE $DISTRO_NAME|g" \
+    -e "s|CachyOS install medium|$DISTRO_NAME install medium|g" \
+    -e "s|CachyOS live medium|$DISTRO_NAME live medium|g" \
+    -e "s|install CachyOS|install $DISTRO_NAME|g" \
+    -e "s|the CachyOS|the $DISTRO_NAME|g" \
+    -e "s|https://cachyos.org|$DISTRO_URL|g" \
+    "$f"
+  after=$(md5sum "$f" | cut -d' ' -f1)
+  [[ $before != "$after" ]] && echo "    rebranded ${f#"$work"/}"
 done
 
 echo "==> patching upstream"
@@ -170,6 +203,17 @@ patch("util-iso.sh",
       f'    vars+=("{did}")\n',
       "generated filenames start with the distribution's own name")
 
+# --- motd --------------------------------------------------------------------
+# prepare_profile() calls generate_motd(), which writes a CachyOS welcome over
+# whatever the overlay put there — the overlay is copied first, so ours loses.
+# Disable the call and let our file stand.
+patch("util-iso.sh",
+      "    generate_motd\n",
+      "    # generate_motd — disabled; Magnetar ships its own /etc/motd in the\n"
+      "    # overlay, and this would overwrite it.\n",
+      "generate_motd does not overwrite our motd",
+      marker="# generate_motd — disabled")
+
 # --- profiledef.sh: drop permissions for a file we deleted -------------------
 # mkarchiso warns for every file_permissions entry whose file is missing.
 # calamares-online.sh is removed above — magnetar-install replaces it — so the
@@ -209,8 +253,22 @@ PY
 localrepo="$root/build/repo/x86_64"
 if compgen -G "$localrepo/*.pkg.tar.zst" > /dev/null; then
   echo "==> using local package repository"
-  ( cd "$localrepo" && repo-add -q -R "$DISTRO_ID.db.tar.zst" ./*.pkg.tar.zst >/dev/null )
-  echo "    $(find "$localrepo" -name '*.pkg.tar.zst' | wc -l) packages indexed"
+  # Regenerate the database, then delete its signatures.
+  #
+  # This repo-add is unsigned — signing is tools/sign-packages.sh's job, and it
+  # needs a passphrase this script has no business asking for. But a database
+  # rebuilt here no longer matches a signature left over from a signed run, and
+  # pacman rejects a mismatched database signature outright ("signature ... is
+  # invalid"), which is NOT waived by SigLevel = Optional TrustAll: TrustAll
+  # forgives an unknown key, not a signature that does not verify.
+  #
+  # The individual package signatures are left alone; they are still valid.
+  ( cd "$localrepo"
+    repo-add -q -R "$DISTRO_ID.db.tar.zst" ./*.pkg.tar.zst >/dev/null
+    rm -f "$DISTRO_ID.db.sig" "$DISTRO_ID.db.tar.zst.sig" \
+          "$DISTRO_ID.files.sig" "$DISTRO_ID.files.tar.zst.sig"
+  )
+  echo "    $(find "$localrepo" -name '*.pkg.tar.zst' | wc -l) packages indexed (database unsigned for the test build)"
 
   python3 "$root/tools/point-iso-at-local-repo.py" \
     "$work/archiso/pacman.conf" "$DISTRO_ID" "$localrepo"

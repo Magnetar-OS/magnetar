@@ -1,0 +1,15 @@
+This is the [38;2;42;169;224mMagnetar[0m live environment.
+
+COSMIC on a CachyOS base: the CachyOS kernel, hardware detection and
+optimised repositories, with the COSMIC desktop and a suite of
+applications built for it.
+
+  Install          "Install Magnetar" in the application library,
+                   or run: magnetar-install
+  Repository       https://repo.magnetaros.com
+  Source           https://github.com/Magnetar-OS/magnetar
+  Issues           https://github.com/Magnetar-OS/magnetar/issues
+
+Built on CachyOS-Live-ISO (https://github.com/CachyOS/CachyOS-Live-ISO)
+and Arch archiso. Calamares is the installer.
+

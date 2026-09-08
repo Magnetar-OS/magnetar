@@ -26,6 +26,11 @@ DROP = {
     # wrong distribution. The installer is reachable from the app library as
     # "Install Magnetar" (magnetar-calamares).
     'cachyos-hello',
+    # Provides /usr/bin/cachyos-installer, "New CLI installer for CachyOS".
+    # A Magnetar ISO carrying a second installer that produces a different
+    # distribution is not a feature; someone would eventually run it and get a
+    # CachyOS install from a Magnetar disc.
+    'cachyos-cli-installer-new',
 }
 
 COSMIC = """# --- COSMIC ---------------------------------------------------------------
