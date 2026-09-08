@@ -1,0 +1,48 @@
+# Maintainer: Dominikos Pritis <hey@myroomie.gr>
+#
+# The trust root for [magnetar]. Everything else in the distribution is
+# downstream of this package: pacman.conf sets SigLevel = Required, which means
+# nothing from the repository installs until this keyring is present and
+# populated.
+#
+# Layout follows archlinux-keyring, which cachyos-keyring and chaotic-keyring
+# also follow — three files under /usr/share/pacman/keyrings/ and a scriptlet
+# that runs `pacman-key --populate`. Deviating would mean reimplementing what
+# pacman-key already does.
+#
+#   magnetar.gpg      the public key, in keyring form
+#   magnetar-trusted  <fingerprint>:<ownertrust>: — 4 is ultimate
+#   magnetar-revoked  fingerprints pacman must actively distrust; empty today
+#
+# When the signing key is rotated or compromised, the old fingerprint goes in
+# magnetar-revoked and a new version of this package ships. That is the whole
+# revocation mechanism, and it only works if people can still install this
+# package — which is why it is a dependency of magnetar-repos rather than
+# something fetched from the repository it protects.
+pkgname=magnetar-keyring
+pkgver=20260908
+pkgrel=1
+pkgdesc="Magnetar package signing keys"
+arch=('any')
+url="https://github.com/Magnetar-OS/magnetar"
+license=('GPL-3.0-or-later')
+install="$pkgname.install"
+
+# No source=(): the key material lives beside this PKGBUILD and is what is
+# being packaged. makepkg resolves local sources by basename anyway.
+source=()
+sha256sums=()
+
+package() {
+  install -Dm644 "$startdir/magnetar.gpg" \
+    "$pkgdir/usr/share/pacman/keyrings/magnetar.gpg"
+  install -Dm644 "$startdir/magnetar-trusted" \
+    "$pkgdir/usr/share/pacman/keyrings/magnetar-trusted"
+  install -Dm644 "$startdir/magnetar-revoked" \
+    "$pkgdir/usr/share/pacman/keyrings/magnetar-revoked"
+
+  # The armoured copy, for people importing by hand rather than by package —
+  # the bootstrap case, where the keyring package itself cannot be verified yet.
+  install -Dm644 "$startdir/magnetar.asc" \
+    "$pkgdir/usr/share/magnetar/magnetar.asc"
+}

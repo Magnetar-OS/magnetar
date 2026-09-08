@@ -13,6 +13,7 @@
   selected: true
   critical: true
   packages:
+     - magnetar-keyring
      - magnetar-repos
      - magnetar-settings
      - magnetar-desktop

@@ -64,6 +64,7 @@ xdg-desktop-portal
 xdg-desktop-portal-gtk
 
 # --- Magnetar ----------------------------------------------------------------
+magnetar-keyring
 magnetar-repos
 magnetar-settings
 magnetar-desktop

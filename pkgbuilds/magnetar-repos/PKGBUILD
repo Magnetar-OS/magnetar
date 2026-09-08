@@ -26,6 +26,11 @@ license=('GPL-3.0-or-later')
 # imports the key and fetches the keyring as a deliberate act.
 depends=(
   'pacman'
+  # Our own keyring first. pacman.conf sets SigLevel = Required for [magnetar],
+  # so without this nothing from the repository installs — including, awkwardly,
+  # the keyring itself. It has to arrive as a dependency, not from the repo it
+  # protects.
+  'magnetar-keyring'
   'cachyos-keyring' 'cachyos-mirrorlist' 'cachyos-v4-mirrorlist'
   'python'
 )

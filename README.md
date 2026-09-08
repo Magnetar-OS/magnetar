@@ -18,7 +18,8 @@ anywhere else.
 | [`pkgbuilds/magnetar-settings`](pkgbuilds/magnetar-settings/) | COSMIC session defaults, via `/etc/skel`. |
 | [`pkgbuilds/magnetar-desktop`](pkgbuilds/magnetar-desktop/) | The meta package. Install it and a CachyOS machine becomes Magnetar. |
 | [`pkgbuilds/apps/`](pkgbuilds/apps/) | The suite, packaged from git until it tags. |
-| [`tools/`](tools/) | The generators and the audit. |
+| [`pkgbuilds/magnetar-keyring`](pkgbuilds/magnetar-keyring/) | The trust root. Everything else is downstream of it. |
+| [`tools/`](tools/) | The generators, the audit and the signing step. |
 
 ## Three things worth knowing before reading the code
 
@@ -114,8 +115,6 @@ Not done yet, in the order it blocks things:
 2. **`magnetar-repo` does not exist**, so `[magnetar]` is configured and
    unserved. `iso/sync.sh` falls back to a local directory over `file://` with
    signatures relaxed *in the build tree only*.
-3. **No `magnetar-keyring`.** `[magnetar]` requires signatures against a key
-   nothing distributes.
 4. **Calamares is branded but untested.** The config assembly asserts on
    CachyOS's text; whether it renders correctly under cosmic-comp is unknown
    until an ISO boots.

@@ -9,3 +9,10 @@ pkg/
 # Local-only build inputs generated from working trees (absolute paths, dirty
 # sources). Never publishable.
 build/pkgbuilds-local/
+
+# Key material. The public key and the trust files under
+# pkgbuilds/magnetar-keyring/ are meant to be committed; nothing else is.
+*secret*.asc
+*.rev
+*.gpg-secret
+secrets.env
