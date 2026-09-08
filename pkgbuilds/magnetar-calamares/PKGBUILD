@@ -10,7 +10,7 @@
 # its files would be undone at exactly the wrong moment.
 pkgname=magnetar-calamares
 pkgver=0.1.0
-pkgrel=1
+pkgrel=3
 pkgdesc="Magnetar installer branding and package selection for Calamares"
 arch=('any')
 url="https://magnetaros.com"

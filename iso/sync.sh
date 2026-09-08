@@ -71,7 +71,11 @@ done
 # build-internal variable that change_grub_version() seds by name, renaming it
 # would mean patching that function too, and nobody ever sees it.
 echo "==> rebranding boot menus"
-for f in "$work/archiso/grub/grub.cfg" "$work"/archiso/syslinux/*.cfg; do
+# Every .cfg in both directories, not just grub.cfg: loopback.cfg carries its
+# own copy of the menu and is what runs when the ISO is booted from Ventoy or
+# chainloaded from another GRUB — a path that is easy to forget and just as
+# visible to whoever uses it.
+for f in "$work"/archiso/grub/*.cfg "$work"/archiso/syslinux/*.cfg; do
   [[ -f $f ]] || continue
   before=$(md5sum "$f" | cut -d' ' -f1)
   sed -i \

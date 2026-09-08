@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+# Keep this system's identity files saying Magnetar.
+#
+# The counterpart to CachyOS's /usr/share/libalpm/scripts/cachyos-branding,
+# which rewrites /etc/os-release, /etc/lsb-release and /etc/issue to CachyOS
+# from pacman hooks. Those hooks fire whenever `filesystem`, `lsb-release` or
+# `cachyos-hooks` is installed or upgraded — so without this, a Magnetar
+# install reverts to CachyOS branding on some future `pacman -Syu`, quietly,
+# and the user is left with a system that cannot say what it is.
+#
+# We do not fight it by removing cachyos-hooks: that package also provides
+# update-initramfs and the plymouth and reboot-required hooks, which are part
+# of how a CachyOS base is maintained. Instead the hooks calling it are
+# overridden by same-named files in /etc/pacman.d/hooks, which pacman gives
+# precedence, and they call this instead.
+set -euo pipefail
+
+update_os_release() {
+    local f=/etc/os-release
+    [[ -w $f ]] || return 0
+    sed -i "$f" \
+        -e 's|^NAME=.*$|NAME="Magnetar"|' \
+        -e 's|^PRETTY_NAME=.*$|PRETTY_NAME="Magnetar"|' \
+        -e 's|^ID=.*$|ID=magnetar|' \
+        -e 's|^ID_LIKE=.*$|ID_LIKE="cachyos arch"|' \
+        -e 's|^ANSI_COLOR=.*$|ANSI_COLOR="38;2;42;169;224"|' \
+        -e 's|^HOME_URL=.*$|HOME_URL="https://magnetaros.com"|' \
+        -e 's|^DOCUMENTATION_URL=.*$|DOCUMENTATION_URL="https://github.com/Magnetar-OS/magnetar/blob/main/docs"|' \
+        -e 's|^SUPPORT_URL=.*$|SUPPORT_URL="https://github.com/Magnetar-OS/magnetar/issues"|' \
+        -e 's|^BUG_REPORT_URL=.*$|BUG_REPORT_URL="https://github.com/Magnetar-OS/magnetar/issues"|' \
+        -e 's|^LOGO=.*$|LOGO=magnetar|'
+
+    # ID_LIKE is not in Arch's stock file, so seding it does nothing on a fresh
+    # install. Insert it after ID= when it is absent. It matters: chwd, the
+    # CachyOS kernel manager and cachyos-hooks all check for cachyos, and
+    # Magnetar wants them to keep working.
+    if ! grep -q '^ID_LIKE=' "$f" && grep -q '^ID=' "$f"; then
+        sed -i "$f" -e '/^ID=/a ID_LIKE="cachyos arch"'
+    fi
+}
+
+update_lsb_release() {
+    local f=/etc/lsb-release
+    [[ -w $f ]] || return 0
+    sed -i "$f" \
+        -e 's|^DISTRIB_ID=.*$|DISTRIB_ID=magnetar|' \
+        -e 's|^DISTRIB_DESCRIPTION=.*$|DISTRIB_DESCRIPTION="Magnetar"|'
+}
+
+update_issue() {
+    # CachyOS rewrites "Arch Linux" to "CachyOS Linux" here; catch both, since
+    # whichever ran last is what we are correcting.
+    local f
+    for f in /etc/issue /usr/share/factory/etc/issue; do
+        [[ -w $f ]] || continue
+        sed -i -e 's|CachyOS Linux|Magnetar|g' -e 's|Arch Linux|Magnetar|g' "$f"
+    done
+}
+
+case "${1:-all}" in
+    os-release)  update_os_release ;;
+    lsb-release) update_lsb_release ;;
+    *)           update_os_release; update_lsb_release; update_issue ;;
+esac

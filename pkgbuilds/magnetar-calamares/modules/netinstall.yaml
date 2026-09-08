@@ -14,6 +14,7 @@
   critical: true
   packages:
      - magnetar-keyring
+     - magnetar-branding
      - magnetar-repos
      - magnetar-settings
      - magnetar-desktop

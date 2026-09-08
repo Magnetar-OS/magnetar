@@ -1,0 +1,11 @@
+post_install() {
+	# Apply immediately rather than waiting for the next transaction that
+	# happens to touch filesystem — otherwise a fresh install reports itself
+	# as CachyOS until something unrelated triggers the hook.
+	/usr/share/libalpm/scripts/magnetar-branding all || true
+	echo " >>> System identity set to Magnetar (os-release, lsb-release, issue)."
+}
+
+post_upgrade() {
+	/usr/share/libalpm/scripts/magnetar-branding all || true
+}

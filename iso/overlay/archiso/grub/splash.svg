@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080">
+  <!-- GRUB draws the menu over the middle of this, so the middle stays dark
+       and the identity sits at the top where nothing overlaps it. -->
+  <defs>
+    <radialGradient id="sky" cx="50%" cy="18%" r="85%">
+      <stop offset="0%"   stop-color="#121820"/>
+      <stop offset="45%"  stop-color="#0B0F14"/>
+      <stop offset="100%" stop-color="#06080B"/>
+    </radialGradient>
+    <radialGradient id="core" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"   stop-color="#FFFFFF"/>
+      <stop offset="35%"  stop-color="#CFEEFF"/>
+      <stop offset="70%"  stop-color="#3FB4E8"/>
+      <stop offset="100%" stop-color="#2AA9E0" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="field" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#7B5CFF"/>
+      <stop offset="50%"  stop-color="#2AA9E0"/>
+      <stop offset="100%" stop-color="#7B5CFF"/>
+    </linearGradient>
+    <filter id="soft" x="-70%" y="-70%" width="240%" height="240%">
+      <feGaussianBlur stdDeviation="7"/>
+    </filter>
+    <filter id="glow" x="-200%" y="-200%" width="500%" height="500%">
+      <feGaussianBlur stdDeviation="30"/>
+    </filter>
+  </defs>
+
+  <rect width="1920" height="1080" fill="url(#sky)"/>
+
+  <g transform="translate(300 150) scale(0.60) translate(-128 -128)">
+    <g fill="none" stroke="url(#field)" stroke-linecap="round" filter="url(#soft)"
+       transform="rotate(-24 128 128)">
+      <ellipse cx="128" cy="128" rx="34" ry="104" stroke-width="8"   opacity="0.95"/>
+      <ellipse cx="128" cy="128" rx="66" ry="104" stroke-width="5.5" opacity="0.60"/>
+      <ellipse cx="128" cy="128" rx="96" ry="100" stroke-width="4"   opacity="0.32"/>
+    </g>
+    <circle cx="128" cy="128" r="70" fill="url(#core)" opacity="0.7" filter="url(#glow)"/>
+    <circle cx="128" cy="128" r="30" fill="url(#core)"/>
+  </g>
+
+  <text x="400" y="140" font-family="Inter, DejaVu Sans, sans-serif" font-size="76"
+        font-weight="600" fill="#EAF6FF" letter-spacing="2">Magnetar</text>
+  <text x="404" y="186" font-family="Inter, DejaVu Sans, sans-serif" font-size="24"
+        fill="#7E93A6" letter-spacing="4">COSMIC ON CACHYOS</text>
+</svg>

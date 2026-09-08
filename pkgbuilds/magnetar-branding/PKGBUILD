@@ -1,0 +1,43 @@
+# Maintainer: Dominikos Pritis <hey@myroomie.gr>
+#
+# What this system says it is, and keeping it that way.
+#
+# /etc/os-release is not owned by any package, so shipping a copy on the ISO
+# looked sufficient. It is not: cachyos-hooks installs pacman hooks that run
+# /usr/share/libalpm/scripts/cachyos-branding, which seds os-release,
+# lsb-release and issue back to CachyOS whenever `filesystem`, `lsb-release` or
+# `cachyos-hooks` is installed or upgraded.
+#
+# The consequence is worse than a wrong ISO: an installed Magnetar would revert
+# to calling itself CachyOS on some later `pacman -Syu`, with no error and
+# nothing in the logs that looks like a problem.
+#
+# The fix is pacman's own override rule — a hook in /etc/pacman.d/hooks
+# replaces a same-named one in /usr/share/libalpm/hooks — so cachyos-hooks
+# stays installed and keeps providing update-initramfs and its plymouth and
+# reboot-required hooks, while the three branding hooks call us instead.
+pkgname=magnetar-branding
+pkgver=20260908
+pkgrel=1
+pkgdesc="Magnetar system identity: os-release, lsb-release and issue"
+arch=('any')
+url="https://github.com/Magnetar-OS/magnetar"
+license=('GPL-3.0-or-later')
+depends=('pacman')
+install="$pkgname.install"
+
+# Deliberately NOT a conflict with cachyos-hooks. We want that package: it
+# carries update-initramfs and hooks the CachyOS base relies on. We only want
+# its three branding hooks not to win.
+
+source=()
+sha256sums=()
+
+package() {
+  install -Dm755 "$startdir/magnetar-branding" \
+    "$pkgdir/usr/share/libalpm/scripts/magnetar-branding"
+
+  for h in os-release lsb-release cachyos-branding; do
+    install -Dm644 "$startdir/hooks/$h.hook" "$pkgdir/etc/pacman.d/hooks/$h.hook"
+  done
+}

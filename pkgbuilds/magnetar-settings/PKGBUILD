@@ -13,7 +13,7 @@
 # package upgrade is not a thing this should do.
 pkgname=magnetar-settings
 pkgver=0.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc="COSMIC session defaults for Magnetar"
 arch=('any')
 url="https://github.com/Magnetar-OS/magnetar"

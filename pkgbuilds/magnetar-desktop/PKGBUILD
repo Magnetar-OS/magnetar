@@ -10,7 +10,7 @@
 #                should not be able to block the desktop from installing.
 pkgname=magnetar-desktop
 pkgver=0.1.0
-pkgrel=1
+pkgrel=3
 pkgdesc="Magnetar: COSMIC desktop on CachyOS"
 arch=('any')
 url="https://github.com/Magnetar-OS/magnetar"
@@ -21,6 +21,10 @@ depends=(
   # it, and it carries the keyrings.
   'magnetar-repos'
   'magnetar-settings'
+  # Not optional: cachyos-hooks rewrites os-release, lsb-release and issue to
+  # CachyOS from pacman hooks. Without this the system renames itself on some
+  # later upgrade.
+  'magnetar-branding'
 
   # COSMIC. cosmic-session pulls the compositor, panel and settings daemon;
   # the rest are named because a desktop without them is broken, not minimal.

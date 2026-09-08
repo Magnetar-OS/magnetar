@@ -10,7 +10,7 @@
 # adopting a new canonical pacman.conf is an explicit act (see the .install).
 pkgname=magnetar-repos
 pkgver=0.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc="Pacman repository configuration for Magnetar: ordered, signed, locked"
 arch=('any')
 url="https://github.com/Magnetar-OS/magnetar"

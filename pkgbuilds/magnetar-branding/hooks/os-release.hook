@@ -1,0 +1,18 @@
+# Overrides /usr/share/libalpm/hooks/os-release.hook from cachyos-hooks.
+#
+# pacman gives /etc/pacman.d/hooks precedence over /usr/share/libalpm/hooks for
+# a file of the same name, so this replaces CachyOS's version rather than
+# running alongside it. Same trigger, our script.
+#
+# If this file is removed, CachyOS's hook takes over again and this system
+# starts calling itself CachyOS after the next transaction touching filesystem.
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Package
+Target = filesystem
+
+[Action]
+Description = Restoring Magnetar identity files.
+When = PostTransaction
+Exec = /usr/share/libalpm/scripts/magnetar-branding os-release
