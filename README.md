@@ -20,6 +20,7 @@ anywhere else.
 | [`pkgbuilds/apps/`](pkgbuilds/apps/) | The suite, packaged from git until it tags. |
 | [`pkgbuilds/magnetar-keyring`](pkgbuilds/magnetar-keyring/) | The trust root. Everything else is downstream of it. |
 | [`tools/`](tools/) | The generators, the audit and the signing step. |
+| [`docs/POP-OS-ADOPTION.md`](docs/POP-OS-ADOPTION.md) | What is worth taking from Pop!_OS, and what only looks like it is. |
 
 ## Three things worth knowing before reading the code
 
