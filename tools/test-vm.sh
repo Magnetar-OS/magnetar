@@ -56,6 +56,9 @@ args=(
   -boot order=d
   -netdev user,id=n0 -device virtio-net-pci,netdev=n0
   -device virtio-balloon
+  # Absolute pointing. Without it the gtk window grabs the mouse and needs
+  # ctrl-alt-g to let go, which makes the VM annoying to actually use.
+  -device qemu-xhci -device usb-tablet
   -name "$DISTRO_NAME live"
 )
 
@@ -103,6 +106,8 @@ elif (( headless )); then
 else
   # virtio-gpu with virgl: cosmic-comp needs a DRM device, and software
   # rendering through llvmpipe is slow enough to look like a hang.
+  # virgl through the host GPU. cosmic-comp needs a DRM device, and more to
+  # the point jump renders through wgpu and simply exits without working GL.
   args+=(-device virtio-vga-gl -display gtk,gl=on)
 fi
 
