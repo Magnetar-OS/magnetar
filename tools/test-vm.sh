@@ -108,7 +108,21 @@ else
   # rendering through llvmpipe is slow enough to look like a hang.
   # virgl through the host GPU. cosmic-comp needs a DRM device, and more to
   # the point jump renders through wgpu and simply exits without working GL.
-  args+=(-device virtio-vga-gl -display gtk,gl=on)
+  #
+  # The monitor socket is here too, not only in --capture, so a session
+  # someone is driving by hand can still be scripted (sendkey, system_reset)
+  # without restarting the VM and losing its state.
+  #
+  # `screendump` is NOT available on this path: with gl=on the framebuffer is
+  # a GL texture and the monitor answers "Error: no surface". Use --capture
+  # when you need pictures; that runs virtio-vga without gl for exactly this
+  # reason.
+  mkdir -p "$vm"
+  rm -f "$vm/monitor.sock"
+  args+=(
+    -device virtio-vga-gl -display gtk,gl=on
+    -monitor "unix:$vm/monitor.sock,server,nowait"
+  )
 fi
 
 echo
