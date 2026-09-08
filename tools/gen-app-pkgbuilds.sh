@@ -21,7 +21,7 @@ while IFS='|' read -r name desc extradeps extraopt; do
 
   dir="$root/pkgbuilds/apps/$name-git"
   mkdir -p "$dir"
-  url="git+https://github.com/entro314-labs/$name.git"
+  url="git+https://github.com/Magnetar-OS/$name.git"
 
   deps="'glib2' 'libxkbcommon' 'systemd-libs' 'zlib'"
   for d in $extradeps; do deps+=" '$d'"; done
@@ -42,7 +42,7 @@ while IFS='|' read -r name desc extradeps extraopt; do
 # Edit the manifest or the generator, not this file.
 #
 # A -git package because $name is not tagged yet. When it cuts a release,
-# linux-release-kit publishes a versioned package to [entro314labs] and this
+# linux-release-kit publishes a versioned package to [magnetar] and this
 # one should be deleted, not kept alongside it.
 pkgname=$name-git
 _pkgname=$name
@@ -50,7 +50,7 @@ pkgver=0.1.0.r0.gHEAD
 pkgrel=1
 pkgdesc="$desc"
 arch=('x86_64' 'aarch64')
-url="https://github.com/entro314-labs/$name"
+url="https://github.com/Magnetar-OS/$name"
 license=('GPL-3.0-or-later')
 
 # The libcosmic base set, derived from what installed COSMIC applications

@@ -13,7 +13,7 @@ pkgver=0.1.0
 pkgrel=1
 pkgdesc="Pacman repository configuration for Magnetar: ordered, signed, locked"
 arch=('any')
-url="https://github.com/entro314-labs/magnetar"
+url="https://github.com/Magnetar-OS/magnetar"
 license=('GPL-3.0-or-later')
 
 # Only what [cachyos] and Arch can actually provide at install time.

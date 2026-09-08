@@ -4,7 +4,7 @@
 # Edit the manifest or the generator, not this file.
 #
 # A -git package because slate is not tagged yet. When it cuts a release,
-# linux-release-kit publishes a versioned package to [entro314labs] and this
+# linux-release-kit publishes a versioned package to [magnetar] and this
 # one should be deleted, not kept alongside it.
 pkgname=slate-git
 _pkgname=slate
@@ -12,7 +12,7 @@ pkgver=0.1.0.r0.gHEAD
 pkgrel=1
 pkgdesc="Calendar and tasks for the COSMIC desktop"
 arch=('x86_64' 'aarch64')
-url="https://github.com/entro314-labs/slate"
+url="https://github.com/Magnetar-OS/slate"
 license=('GPL-3.0-or-later')
 
 # The libcosmic base set, derived from what installed COSMIC applications
@@ -31,7 +31,7 @@ optdepends=(
 
 provides=('slate')
 conflicts=('slate')
-source=("$pkgname::git+https://github.com/entro314-labs/slate.git")
+source=("$pkgname::git+https://github.com/Magnetar-OS/slate.git")
 sha256sums=('SKIP')
 options=('!lto')  # the workspace sets its own lto profile in Cargo.toml
 

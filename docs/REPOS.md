@@ -36,35 +36,32 @@ Three consequences:
 [cachyos-core-znver4]
 [cachyos-extra-znver4]
 
-# 2. This distribution. Above [cachyos] so a Magnetar package can deliberately
-#    replace a CachyOS one (magnetar-settings over cachyos-settings, say).
-#    Below the v3/v4 repos so it can never shadow an optimised rebuild.
-#    Every package here is named magnetar-*, so incidental shadowing is
-#    structurally impossible; tools/repo-audit.sh proves it each build.
+# 2. This distribution: its own packages and the application suite, together.
+#    Above [cachyos] so a Magnetar package can deliberately replace a CachyOS
+#    one (magnetar-settings over cachyos-settings, say). Below the v3/v4 repos
+#    so it can never shadow an optimised rebuild. Distribution packages are
+#    named magnetar-*, so incidental shadowing is structurally impossible for
+#    them; the applications carry their own names, and tools/repo-audit.sh
+#    proves on every build that none collide with Arch.
 [magnetar]
 
 # 3. CachyOS proper: kernels, chwd, settings, gaming stack.
 [cachyos]
 
-# 4. Released entro314labs applications. Below [cachyos] because it holds
-#    ordinary desktop apps, not system components, and should never win a
-#    name collision against a system package.
-[entro314labs]
-
-# 5. Arch.
+# 4. Arch.
 [core]
 [extra]
 [multilib]
 
-# 6. Small, narrow-purpose third parties. Below Arch: they may only supply
+# 5. Small, narrow-purpose third parties. Below Arch: they may only supply
 #    names Arch does not have.
 [endeavouros]
 
-# 7. Large, broad third parties. Last, so they can supply only what nothing
+# 6. Large, broad third parties. Last, so they can supply only what nothing
 #    above carries.
 [chaotic-aur]
 
-# 8. Locked repositories. Present, synced, searchable, and unable to install
+# 7. Locked repositories. Present, synced, searchable, and unable to install
 #    or upgrade anything. See "Locks".
 [jupiter]
 [holo]

@@ -7,7 +7,7 @@ Magnetar repository configuration installed.
 
   Drop-ins:      /etc/pacman.d/magnetar-repos.d/
   Canonical:     /usr/share/magnetar/pacman.conf
-  Policy:        https://github.com/entro314-labs/magnetar/blob/main/docs/REPOS.md
+  Policy:        https://github.com/Magnetar-OS/magnetar/blob/main/docs/REPOS.md
 
 /etc/pacman.conf was NOT modified. On an existing system, review the canonical
 file against yours and adopt it deliberately:

@@ -13,7 +13,7 @@ pkgver=0.1.0
 pkgrel=1
 pkgdesc="Magnetar: COSMIC desktop on CachyOS"
 arch=('any')
-url="https://github.com/entro314-labs/magnetar"
+url="https://github.com/Magnetar-OS/magnetar"
 license=('GPL-3.0-or-later')
 
 depends=(

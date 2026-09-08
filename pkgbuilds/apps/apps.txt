@@ -4,7 +4,7 @@
 #
 # These are -git packages because nothing in the suite is tagged yet. When an
 # app cuts a release, linux-release-kit's own pipeline publishes a real
-# versioned package to [entro314labs] and its entry here should be deleted —
+# versioned package to [magnetar] and its entry here should be deleted —
 # not kept "just in case". Two packages for one application, from two build
 # paths, is how a user ends up with the older one.
 #

@@ -18,8 +18,8 @@ strings:
     shortVersionedName:  Magnetar
     bootloaderEntryName: Magnetar
     productUrl:          https://magnetaros.com
-    supportUrl:          https://github.com/entro314-labs/magnetar/issues
-    knownIssuesUrl:      https://github.com/entro314-labs/magnetar/issues
+    supportUrl:          https://github.com/Magnetar-OS/magnetar/issues
+    knownIssuesUrl:      https://github.com/Magnetar-OS/magnetar/issues
     releaseNotesUrl:     https://magnetaros.com
 
 images:

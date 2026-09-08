@@ -4,7 +4,7 @@
 # Edit the manifest or the generator, not this file.
 #
 # A -git package because jump is not tagged yet. When it cuts a release,
-# linux-release-kit publishes a versioned package to [entro314labs] and this
+# linux-release-kit publishes a versioned package to [magnetar] and this
 # one should be deleted, not kept alongside it.
 pkgname=jump-git
 _pkgname=jump
@@ -12,7 +12,7 @@ pkgver=0.1.0.r0.gHEAD
 pkgrel=1
 pkgdesc="Spotlight-class launcher for the COSMIC desktop"
 arch=('x86_64' 'aarch64')
-url="https://github.com/entro314-labs/jump"
+url="https://github.com/Magnetar-OS/jump"
 license=('GPL-3.0-or-later')
 
 # The libcosmic base set, derived from what installed COSMIC applications
@@ -27,7 +27,7 @@ makedepends=('cargo' 'git' 'just' 'pkgconf')
 
 provides=('jump')
 conflicts=('jump')
-source=("$pkgname::git+https://github.com/entro314-labs/jump.git")
+source=("$pkgname::git+https://github.com/Magnetar-OS/jump.git")
 sha256sums=('SKIP')
 options=('!lto')  # the workspace sets its own lto profile in Cargo.toml
 

@@ -107,7 +107,7 @@ patch("archiso/profiledef.sh",
       "iso_label")
 patch("archiso/profiledef.sh",
       'iso_publisher="CachyOS <https://cachyos.org>"',
-      f'iso_publisher="{dname} <https://github.com/entro314-labs/{did}>"',
+      f'iso_publisher="{dname} <https://github.com/Magnetar-OS/{did}>"',
       "iso_publisher")
 patch("archiso/profiledef.sh",
       'iso_application="CachyOS Live/Rescue DVD"',
