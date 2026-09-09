@@ -20,51 +20,45 @@ Three consequences:
    else in pacman expresses "prefer this repo for this package".
 2. **A high repository shadows every lower one** for every package name it
    carries — including names it carries only incidentally.
-3. **Adding a large repository high in the file silently re-sources the base
-   system.** Chaotic-AUR alone carries thousands of names that also exist in
-   `extra`. Placed above `extra`, it becomes the source of truth for all of
-   them, from someone else's build farm, with no announcement.
+3. **A repository placed above Arch re-sources the base system silently** —
+   for every name it happens to share. How many names that is varies wildly by
+   repository and is worth measuring rather than assuming; the table below has
+   the numbers.
 
 `SigLevel` and `Usage` are the other two controls, covered below.
 
 ## The order
 
 ```ini
-# 1. CPU-optimised rebuilds of core/extra. Must outrank the repos they rebuild
-#    or CachyOS's entire reason for existing is bypassed.
-[cachyos-znver4]
-[cachyos-core-znver4]
-[cachyos-extra-znver4]
+# 1. CPU-optimised rebuilds of core/extra. Must outrank the repos they
+#    rebuild or CachyOS's reason for existing is bypassed.
+[cachyos-znver4] [cachyos-core-znver4] [cachyos-extra-znver4]
 
-# 2. This distribution: its own packages and the application suite, together.
-#    Above [cachyos] so a Magnetar package can deliberately replace a CachyOS
-#    one (magnetar-settings over cachyos-settings, say). Below the v3/v4 repos
-#    so it can never shadow an optimised rebuild. Distribution packages are
-#    named magnetar-*, so incidental shadowing is structurally impossible for
-#    them; the applications carry their own names, and tools/repo-audit.sh
-#    proves on every build that none collide with Arch.
+# 2. This distribution, packages and applications together.
 [magnetar]
 
 # 3. CachyOS proper: kernels, chwd, settings, gaming stack.
 [cachyos]
 
 # 4. Arch.
-[core]
-[extra]
-[multilib]
+[core] [extra] [multilib]
 
-# 5. Small, narrow-purpose third parties. Below Arch: they may only supply
-#    names Arch does not have.
-[endeavouros]
-
-# 6. Large, broad third parties. Last, so they can supply only what nothing
-#    above carries.
-[chaotic-aur]
-
-# 7. Locked repositories. Present, synced, searchable, and unable to install
-#    or upgrade anything. See "Locks".
-[jupiter]
-[holo]
+# ---- everything below here can only supply names nothing above carries ----
+# Ordered by who signs it, then by how much it overlaps Arch.
+#
+# 60 chaotic-aur    signed by a project, shadows 0
+# 61 endeavouros    signed by a project, shadows 1
+# 62 garuda         signed by a project, shadows 2
+# 63 orhun          signed by an Arch developer, shadows 13
+# 64 quarry         signed by an Arch developer, shadows 19
+#
+# 70 nemesis_repo   individually maintained, shadows 1
+# 71 arch4edu       individually maintained, shadows 4
+# 72 ownstuff       individually maintained, shadows 17
+# 73 andontie-aur   individually maintained, shadows 23
+# 74 Reborn-OS      shadows 30 — the most here, so last of the live repos
+#
+# 80 valve          locked: Usage = Sync Search, cannot install or upgrade
 ```
 
 `*-testing` repositories are absent on purpose. CachyOS's v3/v4 repos already
@@ -73,11 +67,39 @@ system nobody can support, including us.
 
 ## Why each third party is here
 
-| Repo | What it is for | Risk | Placement |
+All figures measured against `core` + `extra` + `multilib` (15,433 packages)
+on 2026-09-09, not estimated:
+
+| Repo | Packages | Shadows Arch | Signed by |
 |---|---|---|---|
-| `endeavouros` | The `eos-*` tools — `eos-update`, `welcome`, rankmirrors, a handful of small utilities. About 40 packages, nearly all uniquely named. | Low. Narrow, well-maintained, signed. | Below Arch. It only ever supplies `eos-*`. |
-| `chaotic-aur` | Prebuilt AUR. Removes the "compile for 40 minutes" step for the long tail. | **High.** Thousands of packages, many shadowing `extra`. Built by a third party on their schedule. | Dead last among live repos. |
-| `jupiter` / `holo` (Valve) | SteamOS's own packages: `jupiter-hw-support`, `steamdeck-dsp`, Deck firmware and hardware quirks. | **High and structural.** These target SteamOS's *frozen* Arch snapshot, not rolling Arch. Names like `mesa` and `gamescope` exist there at versions pinned to a distribution we are not. | Locked (below). Off by default. |
+| `chaotic-aur` | 3167 | **0** | the Chaotic-AUR project |
+| `endeavouros` | 56 | 1 | the EndeavourOS project |
+| `garuda` | 102 | 2 | the Garuda project |
+| `orhun` | 284 | 13 | Orhun Parmaksız, **Arch Linux developer** |
+| `quarry` | 1685 | 19 | Anatol Pomozov, **Arch Linux developer** |
+| `nemesis_repo` | 482 | 1 | Erik Dubois (ArcoLinux) |
+| `arch4edu` | 1921 | 4 | Jingbei Li |
+| `ownstuff` | 1396 | 17 | Marius Kittler (Martchus) |
+| `andontie-aur` | 598 | 23 | Holly M. |
+| `Reborn-OS` | 338 | 30 | the RebornOS project |
+
+**Correcting an earlier version of this document.** It claimed Chaotic-AUR
+"carries thousands of names that also exist in `extra`" and used that to argue
+it must go last. The measurement says otherwise: Chaotic-AUR shadows **nothing**.
+It builds AUR packages, and an AUR package is by definition not in the official
+repositories. The reasoning was wrong, so the ordering changed with it —
+Chaotic-AUR is now the *highest* of the third parties, because zero shadowing
+is the strongest claim any of them can make.
+
+The repository that genuinely does replace Arch wholesale is `extra-alucryd`:
+265 of its 301 packages share a name with something Arch ships. It is not
+configured here, and should not be.
+
+**Every one of these repositories is signed.** Configurations that carry
+`SigLevel = Never` for them — including the one this project was developed
+against — are working around keys that were never imported, not around an
+absence of signatures. Magnetar ships all ten at `SigLevel = Required` and
+imports the key at enable time instead.
 
 **Be honest about Valve's repos before enabling them.** Most of what people
 want from them, Magnetar already has from CachyOS: `proton-cachyos`,

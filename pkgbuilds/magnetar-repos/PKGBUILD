@@ -10,7 +10,7 @@
 # adopting a new canonical pacman.conf is an explicit act (see the .install).
 pkgname=magnetar-repos
 pkgver=0.1.0
-pkgrel=2
+pkgrel=3
 pkgdesc="Pacman repository configuration for Magnetar: ordered, signed, locked"
 arch=('any')
 url="https://github.com/Magnetar-OS/magnetar"
@@ -49,8 +49,16 @@ optdepends=(
 conflicts=('alhp-keyring' 'alhp-mirrorlist')
 
 backup=(
-  'etc/pacman.d/magnetar-repos.d/60-endeavouros.conf'
-  'etc/pacman.d/magnetar-repos.d/70-chaotic-aur.conf'
+  'etc/pacman.d/magnetar-repos.d/60-chaotic-aur.conf'
+  'etc/pacman.d/magnetar-repos.d/61-endeavouros.conf'
+  'etc/pacman.d/magnetar-repos.d/62-garuda.conf'
+  'etc/pacman.d/magnetar-repos.d/63-orhun.conf'
+  'etc/pacman.d/magnetar-repos.d/64-quarry.conf'
+  'etc/pacman.d/magnetar-repos.d/70-nemesis_repo.conf'
+  'etc/pacman.d/magnetar-repos.d/71-arch4edu.conf'
+  'etc/pacman.d/magnetar-repos.d/72-ownstuff.conf'
+  'etc/pacman.d/magnetar-repos.d/73-andontie-aur.conf'
+  'etc/pacman.d/magnetar-repos.d/74-Reborn-OS.conf'
   'etc/pacman.d/magnetar-repos.d/80-valve.conf'
   'etc/pacman.d/magnetar-repos.d/99-local.conf'
 )
@@ -73,8 +81,10 @@ package() {
   # the machine's owner had changed, including their locks.
   install -Dm644 "$startdir/pacman.conf" "$pkgdir/usr/share/magnetar/pacman.conf"
 
-  for f in 60-endeavouros 70-chaotic-aur 80-valve 99-local; do
-    install -Dm644 "$startdir/repos.d/$f.conf" "$pkgdir/etc/pacman.d/magnetar-repos.d/$f.conf"
+  # Every drop-in, generated from repos.d/. Adding a repository is a file,
+  # not a code change.
+  for f in "$startdir"/repos.d/*.conf; do
+    install -Dm644 "$f" "$pkgdir/etc/pacman.d/magnetar-repos.d/$(basename "$f")"
   done
 
   install -Dm755 "$startdir/repo-audit.sh" "$pkgdir/usr/bin/magnetar-repo-audit"
