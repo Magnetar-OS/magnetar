@@ -70,11 +70,40 @@ package() {
   install -Dm644 "$startdir/wallpaper/magnetar.svg" \
     "$pkgdir/usr/share/backgrounds/magnetar/magnetar.svg"
 
+  # The rest of the collection, in the same directory so COSMIC's wallpaper
+  # picker lists them, but NOT wired into the config above: these are the
+  # full-colour renders the default deliberately is not. Choosing one is the
+  # user's call, and the picker is where that choice belongs.
+  #
+  # Named for subject and aspect: the `-ultrawide` files are 2.38:1 and will
+  # crop hard on a 16:9 panel, the rest are 1.6:1 to 1.89:1.
+  install -dm755 "$pkgdir/usr/share/backgrounds/magnetar"
+  install -m644 "$startdir/wallpaper/collection"/*.jpg \
+    "$pkgdir/usr/share/backgrounds/magnetar/"
+
   # fastfetch: our logo, and the config that points at it.
+  #
+  # Two forms of the same art. logo.ans is what the config actually loads: the
+  # detailed dipole field with its 24-bit gradient baked in, which needs a
+  # truecolor terminal. logo.txt is the plain-text same drawing, kept for a
+  # 16-colour TTY and for anything that wants to colour it itself (neofetch's
+  # --ascii, a motd). Dropping either one leaves a case with no logo.
+  install -Dm644 "$startdir/fastfetch/magnetar-logo.ans" \
+    "$pkgdir/usr/share/magnetar/logo.ans"
   install -Dm644 "$startdir/fastfetch/magnetar-logo.txt" \
     "$pkgdir/usr/share/magnetar/logo.txt"
   install -Dm644 "$startdir/fastfetch/config.jsonc" \
     "$skel/../fastfetch/config.jsonc"
+
+  # The other sizes, for prompts, motd and anything narrower than a terminal.
+  for a in tiny simple medium detailed; do
+    install -Dm644 "$startdir/ascii/magnetaros-$a.txt" \
+      "$pkgdir/usr/share/magnetar/ascii/magnetaros-$a.txt"
+    install -Dm755 "$startdir/ascii/magnetaros-$a-color.sh" \
+      "$pkgdir/usr/share/magnetar/ascii/magnetaros-$a-color.sh"
+  done
+  install -Dm644 "$startdir/ascii/wordmark.txt" \
+    "$pkgdir/usr/share/magnetar/ascii/wordmark.txt"
 
   install -Dm755 "$startdir/magnetar-apply-defaults" "$pkgdir/usr/bin/magnetar-apply-defaults"
 
