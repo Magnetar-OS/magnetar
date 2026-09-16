@@ -24,7 +24,12 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: App PKGBUILDs match apps.txt
+        # The container runs as root over a checkout owned by the runner user,
+        # so git refuses the repository as dubious. `git diff` outside a
+        # repository then falls back to --no-index, prints its usage and
+        # exits 1 — which read as "stale" on every run.
         run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           ./tools/gen-app-pkgbuilds.sh
           git diff --exit-code -- pkgbuilds/apps \
             || { echo "::error::pkgbuilds/apps is stale. Run tools/gen-app-pkgbuilds.sh and commit."; exit 1; }
