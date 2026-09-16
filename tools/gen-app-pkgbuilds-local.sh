@@ -18,11 +18,11 @@
 # embeds absolute paths and builds from a possibly-dirty tree, which is exactly
 # what a released package must never do.
 #
-#   tools/gen-app-pkgbuilds-local.sh [source-root]   (default ~/GitHub)
+#   tools/gen-app-pkgbuilds-local.sh [source-root]   (default: this repo's parent)
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
-src_root="$(cd "${1:-$HOME/GitHub}" && pwd)"
+src_root="$(cd "${1:-$(dirname "$root")}" && pwd)"
 manifest="$root/pkgbuilds/apps/apps.txt"
 outbase="$root/build/pkgbuilds-local"
 shared_target="$root/build/cargo-target"

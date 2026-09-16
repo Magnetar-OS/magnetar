@@ -50,7 +50,7 @@ the alternative is an ISO that is quietly wrong.
 
 ```sh
 # Packages first — the ISO installs them, so nothing works without this.
-tools/gen-app-pkgbuilds-local.sh ~/GitHub   # until the suite is pushed
+tools/gen-app-pkgbuilds-local.sh   # until the suite is pushed
 tools/build-local-packages.sh               # idempotent; --force to rebuild
 
 # Confirm every name in the ISO list resolves, before mkarchiso spends an hour
