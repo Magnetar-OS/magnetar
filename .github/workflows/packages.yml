@@ -35,8 +35,10 @@ jobs:
             || { echo "::error::pkgbuilds/apps is stale. Run tools/gen-app-pkgbuilds.sh and commit."; exit 1; }
 
       - name: ISO package list matches upstream
+        # `.`, not `source`: container steps run under `sh`, where bash's
+        # POSIX mode searches PATH for a bare name and never finds the file.
         run: |
-          source branding.env
+          . ./branding.env
           git clone --depth 1 --branch "$UPSTREAM_ISO_REF" "$UPSTREAM_ISO_REPO" /tmp/up
           python3 tools/gen-iso-packages.py /tmp/up/archiso/packages_desktop.x86_64
           git diff --exit-code -- iso/overlay/archiso/packages_magnetar.x86_64 \

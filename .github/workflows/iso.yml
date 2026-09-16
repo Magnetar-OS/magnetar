@@ -34,7 +34,7 @@ jobs:
 
       - name: Build
         run: |
-          source branding.env
+          . ./branding.env
           useradd -m builder
           echo 'builder ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
           chmod -R a+rw .
@@ -43,7 +43,7 @@ jobs:
 
       - name: Checksums
         run: |
-          source branding.env
+          . ./branding.env
           cd "build/iso-src/out/$DISTRO_ID"
           sha256sum ./*.iso > SHA256SUMS
           cat SHA256SUMS
