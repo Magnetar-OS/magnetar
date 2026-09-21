@@ -92,6 +92,31 @@ done
 (( shadow_found )) || echo "  none beyond the declared overrides"
 echo
 
+# --- 1b. Magnetar's own names -----------------------------------------------
+# Section 1 only sees a repo winning *over* Arch. The opposite loses silently:
+# [magnetar] sits below the optimised rebuilds, so a suite package whose name
+# any repo above it also carries is simply never installed — `peek` was, for
+# a week, the GIF recorder from cachyos-extra-znver4. Any name [magnetar]
+# shares with another enabled repo is a failure in either direction, because
+# which one a machine gets then depends on its repo order.
+echo "== [magnetar] name collisions =="
+if [[ -n ${pos[magnetar]:-} ]]; then
+  collided=0
+  while read -r _repo name _rest; do
+    others=""
+    for r in ${carried_by[$name]}; do [[ $r == magnetar ]] || others+="$r "; done
+    others=${others% }
+    [[ -n $others ]] || continue
+    read -r winner _ <<< "${carried_by[$name]# }"
+    printf '  FAIL %-30s also in: %-30s (installed from %s)\n' "$name" "$others" "$winner"
+    collided=1; fail=1
+  done < <(pacman -Sl magnetar 2>/dev/null || true)
+  (( collided )) || echo "  none — every [magnetar] package name is unique"
+else
+  echo "  [magnetar] is not configured"
+fi
+echo
+
 # --- 2. Trust ---------------------------------------------------------------
 echo "== signature policy =="
 for r in "${repos[@]}"; do
