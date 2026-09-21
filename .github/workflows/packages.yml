@@ -1,5 +1,10 @@
 name: Packages
 
+# The distribution's own packages: the keyring, repository configuration,
+# session defaults, branding, the meta package, the installer config and the
+# Qt theme. The applications are not built here — each one releases from its
+# own repository through linux-release-kit, which publishes to [magnetar].
+
 on:
   push:
     branches: [main]
@@ -7,9 +12,9 @@ on:
   pull_request:
     paths: ['pkgbuilds/**', 'tools/**']
   schedule:
-    # The suite is packaged from git. Nightly rebuilds keep [magnetar] tracking
-    # the app repositories; without this the ISO ships whatever was current
-    # the last time somebody pushed to this repo.
+    # Nightly for the drift check: CachyOS edits packages_desktop.x86_64
+    # without telling anyone, and the ISO list is derived from it. Rebuilding
+    # the packages alongside is cheap, and publish skips versions already live.
     - cron: '0 4 * * *'
   workflow_dispatch:
 
@@ -23,21 +28,16 @@ jobs:
       - run: pacman -Syu --noconfirm git python
       - uses: actions/checkout@v4
 
-      - name: App PKGBUILDs match apps.txt
+      - name: ISO package list matches upstream
+        # `.`, not `source`: container steps run under `sh`, where bash's
+        # POSIX mode searches PATH for a bare name and never finds the file.
+        #
         # The container runs as root over a checkout owned by the runner user,
         # so git refuses the repository as dubious. `git diff` outside a
         # repository then falls back to --no-index, prints its usage and
         # exits 1 — which read as "stale" on every run.
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          ./tools/gen-app-pkgbuilds.sh
-          git diff --exit-code -- pkgbuilds/apps \
-            || { echo "::error::pkgbuilds/apps is stale. Run tools/gen-app-pkgbuilds.sh and commit."; exit 1; }
-
-      - name: ISO package list matches upstream
-        # `.`, not `source`: container steps run under `sh`, where bash's
-        # POSIX mode searches PATH for a bare name and never finds the file.
-        run: |
           . ./branding.env
           git clone --depth 1 --branch "$UPSTREAM_ISO_REF" "$UPSTREAM_ISO_REPO" /tmp/up
           python3 tools/gen-iso-packages.py /tmp/up/archiso/packages_desktop.x86_64
@@ -54,16 +54,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        pkg:
-          - magnetar-repos
-          - magnetar-settings
-          - magnetar-desktop
-          - apps/circle-git
-          - apps/slate-git
-          - apps/envelope-git
-          - apps/jump-git
-          - apps/peek-git
-          - apps/grabit-git
+        # `nodeps` for the configuration packages. They have no build step, so
+        # their dependencies matter only at install time — and they depend on
+        # each other and on the suite, none of which a fresh container has.
+        # cutecosmic compiles, so it resolves its build dependencies.
+        include:
+          - { pkg: magnetar-keyring,   deps: nodeps }
+          - { pkg: magnetar-repos,     deps: nodeps }
+          - { pkg: magnetar-settings,  deps: nodeps }
+          - { pkg: magnetar-branding,  deps: nodeps }
+          - { pkg: magnetar-desktop,   deps: nodeps }
+          - { pkg: magnetar-calamares, deps: nodeps }
+          - { pkg: cutecosmic,         deps: sync }
     steps:
       - name: Add the CachyOS repository
         run: |
@@ -80,38 +82,151 @@ jobs:
           useradd -m builder
           echo 'builder ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
           chown -R builder:builder .
-          sudo -u builder makepkg -sf --noconfirm --needed -D "pkgbuilds/${{ matrix.pkg }}"
+          if [ "${{ matrix.deps }}" = sync ]; then flags='-s --needed'; else flags='--nodeps'; fi
+          sudo -u builder makepkg -f --noconfirm $flags -D "pkgbuilds/${{ matrix.pkg }}"
 
       - name: namcap
-        # Reported, not enforced. The generated PKGBUILDs carry only the
-        # libcosmic base dependency set on purpose; namcap against a real
-        # build is where the per-app additions come from. Failing the build on
-        # it would just mean nobody sees the list.
+        # Reported, not enforced: the configuration packages name dependencies
+        # namcap cannot see used, on purpose.
         continue-on-error: true
         run: namcap pkgbuilds/${{ matrix.pkg }}/*.pkg.tar.zst
 
       - uses: actions/upload-artifact@v4
         with:
-          name: pkg-${{ strategy.job-index }}
+          name: pkg-${{ matrix.pkg }}
           path: pkgbuilds/${{ matrix.pkg }}/*.pkg.tar.zst
           if-no-files-found: error
 
-  # Publishing is deliberately a separate, manual-approval job: these packages
-  # land in a repository that other people's machines upgrade from.
+  # Adds every built package whose exact filename is not already in [magnetar].
+  # A version is published once: to ship a change, bump pkgver or pkgrel.
+  # Rebuilding an unchanged PKGBUILD therefore publishes nothing, which is what
+  # makes the nightly run safe.
   publish:
     name: Publish to [magnetar]
     needs: build
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
-    environment: magnetar-repo
+    container: { image: 'archlinux:base-devel' }
+    # Every app's release also pushes to arch-repo; this only serialises the
+    # runs of this workflow. Pushes from the apps are handled by the retry.
+    concurrency: { group: arch-repo-publish, cancel-in-progress: false }
     steps:
+      - run: pacman -Syu --noconfirm git
+
+      - uses: actions/checkout@v4
+
       - uses: actions/download-artifact@v4
         with: { path: dist, merge-multiple: true }
-      - name: Not yet wired
+
+      - name: Import the signing key
+        env:
+          LINUX_GPG_PRIVATE_KEY: ${{ secrets.LINUX_GPG_PRIVATE_KEY }}
+          LINUX_GPG_PASSPHRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
         run: |
-          echo "::notice::Built $(ls dist | wc -l) packages."
-          ls -la dist
-          echo "::error::Publishing is not wired yet — the magnetar-repo Pages repository does not exist."
-          echo "Mirror arch-repo's layout and reuse linux-release-kit's arch-repo.yml:"
-          echo "  https://github.com/entro314-labs/linux-release-kit/blob/main/.github/workflows/arch-repo.yml"
+          set -eu
+          [ -n "$LINUX_GPG_PRIVATE_KEY" ] || { echo "::error::LINUX_GPG_PRIVATE_KEY is not set. [magnetar] is SigLevel = Required; an unsigned package in it is one nobody can install."; exit 1; }
+          mkdir -p -m 700 ~/.gnupg
+          echo 'allow-loopback-pinentry' >> ~/.gnupg/gpg-agent.conf
+          echo 'pinentry-mode loopback' >> ~/.gnupg/gpg.conf
+          # Same two encodings linux-release-kit accepts: armored, or base64.
+          if printf '%s' "$LINUX_GPG_PRIVATE_KEY" | grep -q 'BEGIN PGP PRIVATE KEY'; then
+            printf '%s\n' "$LINUX_GPG_PRIVATE_KEY" > /tmp/key.asc
+          else
+            printf '%s' "$LINUX_GPG_PRIVATE_KEY" | base64 --decode > /tmp/key.asc
+          fi
+          gpg --batch --yes --passphrase "$LINUX_GPG_PASSPHRASE" --import /tmp/key.asc
+          rm -f /tmp/key.asc
+
+      - name: Stage, validate and push
+        env:
+          ARCH_REPO_TOKEN: ${{ secrets.ARCH_REPO_TOKEN }}
+          LINUX_GPG_PASSPHRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
+          LINUX_GPG_KEY_ID: ${{ secrets.LINUX_GPG_KEY_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [ -n "$ARCH_REPO_TOKEN" ] || { echo "::error::ARCH_REPO_TOKEN is not set."; exit 1; }
+          . ./branding.env
+          REPO="$DISTRO_REPO_NAME"
+          KEY="${LINUX_GPG_KEY_ID:-$(gpg --list-secret-keys --with-colons | awk -F: '/^fpr:/ {print $10; exit}')}"
+          DIST="$PWD/dist"
+          STAGE="$PWD/stage"
+          REMOTE="https://x-access-token:${ARCH_REPO_TOKEN}@github.com/Magnetar-OS/arch-repo.git"
+          sign() { gpg --batch --yes -u "$KEY" --passphrase "$LINUX_GPG_PASSPHRASE" --detach-sign --output "$1.sig" "$1"; }
+
+          # Distro packages are x86_64 or `any`; the distribution is x86_64
+          # only, so they go in x86_64/ alone.
+          stage() {
+            rm -rf "$STAGE"
+            git clone -q --depth 1 "$REMOTE" "$STAGE"
+            cd "$STAGE/x86_64"
+            ADDED=()
+            for pkg in "$DIST"/*.pkg.tar.zst; do
+              f="$(basename "$pkg")"
+              [ -e "$f" ] && continue
+              cp "$pkg" .
+              sign "$f"
+              ADDED+=("$f")
+              # Keep two superseded versions for rollback, as the app
+              # pipelines do. The [0-9] guard keeps magnetar-repos-* from
+              # matching another package's files.
+              name="$(printf '%s' "$f" | sed -E 's/-[^-]+-[^-]+-[^-]+\.pkg\.tar\.zst$//')"
+              ls | grep -E "^${name}-[0-9][^-]*-[0-9]+-(any|x86_64)\.pkg\.tar\.zst$" | grep -vx "$f" \
+                | sort -V | head -n -2 | while read -r old; do
+                  echo "Pruning superseded $old"; rm -f "$old" "$old.sig"
+                done || true
+            done
+            cd "$STAGE"
+            [ "${#ADDED[@]}" -gt 0 ] || return 0
+
+            # repo-add appends to the EXISTING database, so the apps' entries
+            # survive. Real files, not repo-add's symlinks: Pages serves files.
+            ( cd x86_64
+              rm -f "$REPO.db" "$REPO.files"
+              repo-add -q "$REPO.db.tar.gz" "${ADDED[@]}"
+              rm -f "$REPO.db" "$REPO.files" ./*.old
+              cp "$REPO.db.tar.gz" "$REPO.db"
+              cp "$REPO.files.tar.gz" "$REPO.files"
+              for db in "$REPO.db" "$REPO.db.tar.gz" "$REPO.files" "$REPO.files.tar.gz"; do sign "$db"; done
+            )
+          }
+
+          # What a user's machine does: trust only the published key, require
+          # signatures, sync, and fetch every package just added.
+          validate() {
+            local root; root="$(mktemp -d)"
+            mkdir -p "$root"/{db,cache,gnupg}
+            printf '[options]\nArchitecture = x86_64\n[%s]\nSigLevel = Required DatabaseRequired\nServer = file://%s/x86_64\n' \
+              "$REPO" "$STAGE" > "$root/pacman.conf"
+            pacman-key --gpgdir "$root/gnupg" --init >/dev/null
+            pacman-key --gpgdir "$root/gnupg" --add "$STAGE/$REPO.asc" >/dev/null
+            pacman-key --gpgdir "$root/gnupg" --lsign-key "$KEY" >/dev/null
+            local names=()
+            for f in "${ADDED[@]}"; do names+=("$(printf '%s' "$f" | sed -E 's/-[^-]+-[^-]+-[^-]+\.pkg\.tar\.zst$//')"); done
+            pacman --config "$root/pacman.conf" --dbpath "$root/db" --cachedir "$root/cache" \
+              --gpgdir "$root/gnupg" --noconfirm -Syw --nodeps --nodeps "${names[@]}"
+          }
+
+          for attempt in 1 2 3; do
+            stage
+            if [ "${#ADDED[@]}" -eq 0 ]; then
+              echo "Every built version is already in [$REPO]; nothing to publish."
+              exit 0
+            fi
+            validate
+            MSG="$(printf '%s\n' "${ADDED[@]}" | sed -E 's/-([^-]+-[^-]+)-[^-]+\.pkg\.tar\.zst$/ \1/' | paste -sd, - | sed 's/,/, /g') (x86_64)"
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add -A
+            git commit -q -m "$MSG"
+            # A rejection means an app released meanwhile. Re-stage against its
+            # database rather than rebasing, which would drop one entry.
+            if git push -q origin HEAD:main; then
+              echo "Published: $MSG"
+              exit 0
+            fi
+            echo "::warning::Push rejected (concurrent release?) — re-staging, attempt $((attempt + 1))/3"
+            cd "$GITHUB_WORKSPACE"
+          done
+          echo "::error::Could not push to Magnetar-OS/arch-repo after 3 attempts"
           exit 1

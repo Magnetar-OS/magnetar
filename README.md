@@ -17,7 +17,7 @@ anywhere else.
 | [`pkgbuilds/magnetar-repos`](pkgbuilds/magnetar-repos/) | Repository order, signing and locks. |
 | [`pkgbuilds/magnetar-settings`](pkgbuilds/magnetar-settings/) | COSMIC session defaults, via `/etc/skel`. |
 | [`pkgbuilds/magnetar-desktop`](pkgbuilds/magnetar-desktop/) | The meta package. Install it and a CachyOS machine becomes Magnetar. |
-| [`pkgbuilds/apps/`](pkgbuilds/apps/) | The suite, packaged from git until it tags. |
+| [`pkgbuilds/apps/apps.txt`](pkgbuilds/apps/apps.txt) | The suite, for local ISO-test builds. Releases ship from each app's own repository. |
 | [`pkgbuilds/magnetar-keyring`](pkgbuilds/magnetar-keyring/) | The trust root. Everything else is downstream of it. |
 | [`tools/`](tools/) | The generators, the audit and the signing step. |
 | [`docs/POP-OS-ADOPTION.md`](docs/POP-OS-ADOPTION.md) | What is worth taking from Pop!_OS, and what only looks like it is. |
@@ -50,7 +50,7 @@ the alternative is an ISO that is quietly wrong.
 
 ```sh
 # Packages first — the ISO installs them, so nothing works without this.
-tools/gen-app-pkgbuilds-local.sh   # until the suite is pushed
+tools/gen-app-pkgbuilds-local.sh           # the suite from local working trees
 tools/build-local-packages.sh               # idempotent; --force to rebuild
 
 # Confirm every name in the ISO list resolves, before mkarchiso spends an hour
@@ -77,9 +77,18 @@ Run these after the upstream they derive from moves. CI fails if you forget.
 
 ```sh
 tools/gen-iso-packages.py build/iso-src/archiso/packages_desktop.x86_64  # after bumping UPSTREAM_ISO_REF
-tools/gen-app-pkgbuilds.sh                                               # after editing pkgbuilds/apps/apps.txt
 tools/regen-system-actions.sh                                            # after a COSMIC update
 ```
+
+## Publishing
+
+`[magnetar]` is [`Magnetar-OS/arch-repo`](https://github.com/Magnetar-OS/arch-repo),
+served at `https://repo.magnetaros.com`. Each app publishes itself when it
+tags a release. The packages under `pkgbuilds/` publish from
+`.github/workflows/packages.yml` on every push to `main`: any version not
+already in the repository is signed, added, and checked with a real
+`pacman -Syw` before the push. **To ship a change to one, bump its `pkgrel`** —
+an unchanged version is never republished.
 
 ## State
 
@@ -99,28 +108,20 @@ Three things this turned up that were not obvious:
 
 1. **`-C target-cpu=native`.** CachyOS ships `/etc/makepkg.conf.d/rust.conf`
    setting it. Correct for a machine building for itself; for a package other
-   people install it produces a binary that SIGILLs on any older CPU. The app
-   PKGBUILDs pin a generic baseline.
-2. **The suite cannot be packaged from git yet.** `peek` and `grabit` have no
-   commits; `circle`, `slate` and `envelope` depend on `cosmic-pim` by relative
-   path, so no single-repo clone resolves. Hence
-   `tools/gen-app-pkgbuilds-local.sh`, which stages working trees with their
-   siblings — a development path, not a shipping one.
+   people install it produces a binary that SIGILLs on any older CPU. The local
+   app PKGBUILDs pin a generic baseline.
+2. **Testing an ISO means testing unpublished code.**
+   `tools/gen-app-pkgbuilds-local.sh` stages the apps' working trees with their
+   siblings and builds -git packages that provide the released names — a
+   development path, not a shipping one.
 3. **makepkg resolves local `source=` entries by basename**, so nested paths
    never worked. The config packages read from `$startdir` instead.
 
 Not done yet, in the order it blocks things:
 
-1. **The suite is not on GitHub.** All seven repositories 404. Until they are
-   pushed, the committed PKGBUILDs cannot build and only the local path works.
-2. **`magnetar-repo` does not exist**, so `[magnetar]` is configured and
-   unserved. `iso/sync.sh` falls back to a local directory over `file://` with
-   signatures relaxed *in the build tree only*.
-4. **Calamares is branded but untested.** The config assembly asserts on
+1. **Calamares is branded but untested.** The config assembly asserts on
    CachyOS's text; whether it renders correctly under cosmic-comp is unknown
    until an ISO boots.
-5. **Per-app dependencies are the libcosmic base set only.** namcap runs in CI
-   and reports the rest.
 
 ## Licence
 

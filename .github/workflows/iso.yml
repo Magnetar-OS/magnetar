@@ -26,6 +26,14 @@ jobs:
 
       - uses: actions/checkout@v4
 
+      # mkarchiso verifies against the build host's keyring, and [magnetar] is
+      # SigLevel = Required. Trust the key from the keyring package's source —
+      # the same file magnetar-keyring installs on users' machines.
+      - name: Trust the Magnetar signing key
+        run: |
+          pacman-key --add pkgbuilds/magnetar-keyring/magnetar.asc
+          pacman-key --lsign-key 382D984841F8C8A2BFB952675623FAF3DF36FFAF
+
       # sync.sh asserts against exact upstream text and exits non-zero when
       # CachyOS has moved. That failure is the point of this step: it is the
       # signal to re-read their file, not a flake to retry.
