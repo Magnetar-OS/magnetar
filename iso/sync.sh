@@ -195,10 +195,14 @@ patch("util-iso.sh",
 # the image from profiledef's iso_name, which is now "magnetar", but upstream's
 # rename step still looks for "cachyos-<date>-x86_64.iso" and dies. The ISO is
 # fine at that point; the checksum step after it never runs.
+#
+# The same literal profiledef gets, not `${iso_name}`: that variable lives in
+# profiledef.sh, which mkarchiso reads and util-iso.sh never sources, so it
+# expanded to nothing and the rename looked for "-<date>-x86_64.iso".
 patch("util-iso.sh",
       '    mv "$outFolder/$_profile/cachyos-$(date',
-      '    mv "$outFolder/$_profile/${iso_name}-$(date',
-      "the final rename uses iso_name, not a literal")
+      f'    mv "$outFolder/$_profile/{did}-$(date',
+      "the final rename uses the distribution's iso_name")
 
 # gen_iso_fn builds the published filename. Left alone it produces
 # "cachyos-magnetar-linux-260908.iso", which names the wrong distribution first.
