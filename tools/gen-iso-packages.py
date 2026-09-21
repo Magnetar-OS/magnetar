@@ -92,16 +92,19 @@ popsicle
 fwupd
 
 # --- The suite -------------------------------------------------------------
-# -git builds served from [magnetar]. They ship on the live ISO rather than
-# sitting in optdepends: the suite is what the distribution is for, and an
-# ISO that does not show it is an ISO nobody can evaluate.
-jump-git
-peek-git
-grabit-git
-locket-git
-envelope-git
-circle-git
-slate-git
+# Released packages served from [magnetar], published there by each app's own
+# release pipeline. They ship on the live ISO rather than sitting in
+# optdepends: the suite is what the distribution is for, and an ISO that does
+# not show it is an ISO nobody can evaluate.
+jump
+peek
+grabit
+locket
+envelope
+circle
+slate
+pencil
+pocket
 """
 
 

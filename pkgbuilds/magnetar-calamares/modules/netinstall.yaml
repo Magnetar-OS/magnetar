@@ -74,13 +74,15 @@
   selected: true
   critical: false
   packages:
-     - jump-git
-     - peek-git
-     - grabit-git
-     - locket-git
-     - envelope-git
-     - circle-git
-     - slate-git
+     - jump
+     - peek
+     - grabit
+     - locket
+     - envelope
+     - circle
+     - slate
+     - pencil
+     - pocket
 
 - name: "Gaming"
   description: "Steam, Proton and the CachyOS gaming stack"
