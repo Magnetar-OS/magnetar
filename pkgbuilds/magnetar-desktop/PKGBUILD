@@ -10,7 +10,7 @@
 #                should not be able to block the desktop from installing.
 pkgname=magnetar-desktop
 pkgver=0.1.0
-pkgrel=3
+pkgrel=4
 pkgdesc="Magnetar: COSMIC desktop on CachyOS"
 arch=('any')
 url="https://github.com/Magnetar-OS/magnetar"
@@ -83,7 +83,7 @@ optdepends=(
   # The suite. Every one is pre-1.0 and unreleased; none of them should be
   # able to block a desktop install.
   'jump: Spotlight-class launcher (bound to Super+space by magnetar-settings)'
-  'peek: QuickLook-class file previewer'
+  'magnetar-peek: QuickLook-class file previewer'
   'grabit: selection actions over any Wayland surface'
   'locket: password manager, Secret Service and SSH agent'
   'envelope: mail'

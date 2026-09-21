@@ -251,7 +251,7 @@ fwupd
 # optdepends: the suite is what the distribution is for, and an ISO that does
 # not show it is an ISO nobody can evaluate.
 jump
-peek
+magnetar-peek
 grabit
 locket
 envelope

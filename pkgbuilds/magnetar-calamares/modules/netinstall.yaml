@@ -75,7 +75,7 @@
   critical: false
   packages:
      - jump
-     - peek
+     - magnetar-peek
      - grabit
      - locket
      - envelope

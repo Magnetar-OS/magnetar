@@ -1,7 +1,11 @@
 # The application suite, as tools/gen-app-pkgbuilds-local.sh builds it from
 # local working trees for ISO testing.
 #
-# Format: name|pkgdesc|extra depends (space separated)|extra optdepends (comma separated)
+# Format: name|pkgdesc|extra depends (space separated)|extra optdepends (comma separated)|released package name
+#
+# The last field is needed only where the released package is not named after
+# the repository: peek ships as magnetar-peek, because every distribution
+# already has an unrelated `peek` (a GIF recorder).
 #
 # Nothing here ships. Every app releases through linux-release-kit, which
 # publishes a versioned package to [magnetar]; the ISO and the installer name
@@ -23,5 +27,5 @@ circle|Contacts for the COSMIC desktop, stored as vCards in a vdir||khard: comma
 slate|Calendar and tasks for the COSMIC desktop||vdirsyncer: CalDAV sync
 envelope|Mail for the COSMIC desktop||gnupg: OpenPGP keyring access
 jump|Spotlight-class launcher for the COSMIC desktop|pop-launcher|
-peek|QuickLook-class file previewer for the COSMIC desktop||
+peek|QuickLook-class file previewer for the COSMIC desktop|||magnetar-peek
 grabit|Selection actions for Wayland: copy, search, translate, transform, run||

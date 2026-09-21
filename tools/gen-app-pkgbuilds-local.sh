@@ -31,8 +31,9 @@ mkdir -p "$shared_target"
 
 echo "source root: $src_root"
 
-while IFS='|' read -r name desc extradeps _extraopt; do
+while IFS='|' read -r name desc extradeps _extraopt pkgname_released; do
   [[ -n ${name:-} && $name != \#* ]] || continue
+  released=${pkgname_released:-$name}
   [[ -f $src_root/$name/Cargo.toml ]] || { echo "  SKIP $name: no working tree" >&2; continue; }
 
   # Siblings the app references by relative path. Read out of Cargo.toml
@@ -66,8 +67,8 @@ url="https://magnetaros.com"
 license=('GPL-3.0-or-later')
 depends=($deps)
 makedepends=('cargo' 'git' 'just' 'pkgconf' 'rsync')
-provides=('$name')
-conflicts=('$name')
+provides=('$released')
+conflicts=('$released')
 options=('!lto' '!debug')
 
 _src_root='$src_root'
