@@ -29,6 +29,11 @@ jobs:
           # repository configured here, which failed this whole transaction.
           pacman -Syu --noconfirm cachyos-keyring cachyos-mirrorlist cachyos-v4-mirrorlist
 
+          # [magnetar] is SigLevel = Required. Trust the key from the keyring
+          # package's source, as the ISO job does.
+          pacman-key --add pkgbuilds/magnetar-keyring/magnetar.asc
+          pacman-key --lsign-key 382D984841F8C8A2BFB952675623FAF3DF36FFAF
+
           cp pkgbuilds/magnetar-repos/pacman.conf /etc/pacman.conf
           mkdir -p /etc/pacman.d/magnetar-repos.d
           cp pkgbuilds/magnetar-repos/repos.d/*.conf /etc/pacman.d/magnetar-repos.d/
