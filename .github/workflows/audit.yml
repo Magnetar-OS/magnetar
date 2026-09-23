@@ -23,13 +23,16 @@ jobs:
           pacman-key --recv-keys F3B607488DB35A47 --keyserver keyserver.ubuntu.com
           pacman-key --lsign-key F3B607488DB35A47
           sed -i '/^\[core\]$/i[cachyos]\nServer = https://mirror.cachyos.org/repo/$arch/$repo\n' /etc/pacman.conf
-          pacman -Syu --noconfirm cachyos-keyring cachyos-mirrorlist cachyos-v4-mirrorlist \
-                                  endeavouros-mirrorlist chaotic-mirrorlist || true
+          # Only the mirrorlists the shipped pacman.conf includes unconditionally.
+          # The third-party drop-ins ship commented out, so their mirrorlists
+          # (chaotic, endeavouros, reborn) are not read — and are not in any
+          # repository configured here, which failed this whole transaction.
+          pacman -Syu --noconfirm cachyos-keyring cachyos-mirrorlist cachyos-v4-mirrorlist
 
           cp pkgbuilds/magnetar-repos/pacman.conf /etc/pacman.conf
           mkdir -p /etc/pacman.d/magnetar-repos.d
           cp pkgbuilds/magnetar-repos/repos.d/*.conf /etc/pacman.d/magnetar-repos.d/
-          pacman -Sy || true
+          pacman -Sy
 
       # Fails on: a repository above Arch winning a name it does not declare an
       # override for, any repository resolving to TrustAll or Never, and ALHP
