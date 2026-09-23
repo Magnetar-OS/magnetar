@@ -33,8 +33,10 @@ cachyos:archlinux-keyring
 # pacman itself — CachyOS carries its own build.
 cachyos:pacman
 
-# Firmware — CachyOS ships a split, more current linux-firmware set
+# Firmware — CachyOS ships a split, more current linux-firmware set.
+# -amd and -ti joined the split by 2026-09-23.
 cachyos:linux-firmware
+cachyos:linux-firmware-amd
 cachyos:linux-firmware-amdgpu
 cachyos:linux-firmware-atheros
 cachyos:linux-firmware-broadcom
@@ -51,6 +53,7 @@ cachyos:linux-firmware-qcom
 cachyos:linux-firmware-qlogic
 cachyos:linux-firmware-radeon
 cachyos:linux-firmware-realtek
+cachyos:linux-firmware-ti
 cachyos:linux-firmware-whence
 cachyos:broadcom-wl-dkms
 cachyos:dkms
