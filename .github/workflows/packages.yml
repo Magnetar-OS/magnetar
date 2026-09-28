@@ -142,7 +142,8 @@ jobs:
   # Adds every built package whose exact filename is not already in [magnetar].
   # A version is published once: to ship a change, bump pkgver or pkgrel.
   # Rebuilding an unchanged PKGBUILD therefore publishes nothing, which is what
-  # makes the nightly run safe.
+  # makes the nightly run safe — and a configuration package whose contents
+  # changed without a bump fails the run instead of publishing nothing.
   # Runs when some legs failed, too: a Qt bump that breaks cutecosmic must not
   # freeze every other distribution package. The failed leg still fails the
   # run; its package is simply absent from dist/ and publishes next time.
@@ -201,6 +202,15 @@ jobs:
           REMOTE="https://x-access-token:${ARCH_REPO_TOKEN}@github.com/Magnetar-OS/arch-repo.git"
           sign() { gpg --batch --yes -u "$KEY" --passphrase "$LINUX_GPG_PASSPHRASE" --detach-sign --output "$1.sig" "$1"; }
 
+          # Every file a package installs, with its content hash. Metadata
+          # (.PKGINFO's build date, .MTREE, .BUILDINFO) differs on every build.
+          payload() {
+            local d; d="$(mktemp -d)"
+            bsdtar -xf "$1" -C "$d" --exclude '.PKGINFO' --exclude '.MTREE' --exclude '.BUILDINFO'
+            ( cd "$d" && find . -type f -print0 | sort -z | xargs -0 -r sha256sum )
+            rm -rf "$d"
+          }
+
           # Distro packages are x86_64 or `any`; the distribution is x86_64
           # only, so they go in x86_64/ alone.
           stage() {
@@ -210,7 +220,21 @@ jobs:
             ADDED=()
             for pkg in "$DIST"/*.pkg.tar.zst; do
               f="$(basename "$pkg")"
-              [ -e "$f" ] && continue
+              if [ -e "$f" ]; then
+                # Already published. For the configuration packages (`any`,
+                # nothing compiled, so a rebuild is byte-for-byte the same
+                # payload) a difference means the PKGBUILD's files changed
+                # without a pkgrel bump, and this run would silently ship
+                # nothing. cutecosmic compiles and is not reproducible.
+                case "$f" in
+                  *-any.pkg.tar.zst)
+                    if [ "$(payload "$pkg")" != "$(payload "$f")" ]; then
+                      echo "::error::$f is already published with different contents. Bump pkgrel in pkgbuilds/${f%-*-*-*}/PKGBUILD to ship the change."
+                      exit 1
+                    fi ;;
+                esac
+                continue
+              fi
               cp "$pkg" .
               sign "$f"
               ADDED+=("$f")
