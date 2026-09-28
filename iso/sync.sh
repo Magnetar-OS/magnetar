@@ -233,15 +233,15 @@ remove("archiso/profiledef.sh",
 # --- archiso/pacman.conf: the repo the ISO installs Magnetar packages from -----
 patch("archiso/pacman.conf",
       "[cachyos]\nServer = https://mirror.cachyos.org/repo/$arch/$repo",
-      "[cachyos]\nServer = https://mirror.cachyos.org/repo/$arch/$repo\n"
-      "\n"
-      "# Magnetar packages. Below [cachyos] and above [core], matching the order\n"
-      "# the installed system gets — see docs/REPOS.md. Signed: the build must\n"
-      "# fail on a bad signature rather than bake an unverified package into an\n"
-      "# ISO that other people boot.\n"
+      "# Magnetar packages. Above [cachyos], matching the order the installed\n"
+      "# system gets — see docs/REPOS.md. Signed: the build must fail on a bad\n"
+      "# signature rather than bake an unverified package into an ISO that other\n"
+      "# people boot.\n"
       f"[{did}]\n"
       "SigLevel = Required DatabaseOptional\n"
-      f"Server = {drepo}/$arch",
+      f"Server = {drepo}/$arch\n"
+      "\n"
+      "[cachyos]\nServer = https://mirror.cachyos.org/repo/$arch/$repo",
       "magnetar repository available at build time",
       marker=f"[{did}]")
 
@@ -258,7 +258,7 @@ PY
 # The published [magnetar] repository does not exist yet, and even once it does,
 # testing an ISO means testing packages that have not been published. When
 # build/repo holds packages, point the ISO's [magnetar] at them over file://.
-localrepo="$root/build/repo/x86_64"
+localrepo="${MAGNETAR_LOCAL_REPO:-$root/build/repo/x86_64}"
 if compgen -G "$localrepo/*.pkg.tar.zst" > /dev/null; then
   echo "==> using local package repository"
   # Regenerate the database, then delete its signatures.
