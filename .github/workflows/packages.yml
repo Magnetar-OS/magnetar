@@ -187,17 +187,33 @@ jobs:
               cp "$pkg" .
               sign "$f"
               ADDED+=("$f")
-              # Keep two superseded versions for rollback, as the app
-              # pipelines do. The [0-9] guard keeps magnetar-repos-* from
-              # matching another package's files.
+              # Keep one superseded version for rollback, as the app
+              # pipelines do: a GitHub Pages site may not exceed 1 GB. The
+              # [0-9] guard keeps magnetar-repos-* from matching another
+              # package's files.
               name="$(printf '%s' "$f" | sed -E 's/-[^-]+-[^-]+-[^-]+\.pkg\.tar\.zst$//')"
-              ls | grep -E "^${name}-[0-9][^-]*-[0-9]+-(any|x86_64)\.pkg\.tar\.zst$" | grep -vx "$f" \
-                | sort -V | head -n -2 | while read -r old; do
+              find . -maxdepth 1 -type f -printf '%f\n' \
+                | grep -E "^${name}-[0-9][^-]*-[0-9]+-(any|x86_64)\.pkg\.tar\.zst$" | grep -vx "$f" \
+                | sort -V | head -n -1 | while read -r old; do
                   echo "Pruning superseded $old"; rm -f "$old" "$old.sig"
                 done || true
             done
             cd "$STAGE"
             [ "${#ADDED[@]}" -gt 0 ] || return 0
+
+            # [magnetar] is SigLevel = Required: an unsigned package in it is
+            # one nobody can install, and a signature without its file
+            # verifies nothing. Both architectures, since the app pipelines
+            # write aarch64/ too.
+            for dir in x86_64 aarch64; do
+              [ -d "$dir" ] || continue
+              find "$dir" -maxdepth 1 -type f -name '*.pkg.tar.zst' | while read -r p; do
+                [ -e "$p.sig" ] || { echo "Removing unsigned $p"; rm -f "$p"; }
+              done
+              find "$dir" -maxdepth 1 -type f -name '*.sig' | while read -r sig; do
+                [ -e "${sig%.sig}" ] || { echo "Removing orphan signature $sig"; rm -f "$sig"; }
+              done
+            done
 
             # repo-add appends to the EXISTING database, so the apps' entries
             # survive. Real files, not repo-add's symlinks: Pages serves files.
@@ -209,6 +225,15 @@ jobs:
               cp "$REPO.files.tar.gz" "$REPO.files"
               for db in "$REPO.db" "$REPO.db.tar.gz" "$REPO.files" "$REPO.files.tar.gz"; do sign "$db"; done
             )
+
+            # GitHub Pages will not deploy a site over 1 GB, and says so only
+            # after the push has succeeded — this job would go green while
+            # repo.magnetaros.com kept serving the last database that fit.
+            site_bytes="$(du -sb --exclude=.git . | cut -f1)"
+            if [ "$site_bytes" -gt $((950 * 1024 * 1024)) ]; then
+              echo "::error::The staged arch-repo tree is $((site_bytes / 1024 / 1024)) MiB; GitHub Pages will not deploy a site over 1 GB."
+              exit 1
+            fi
           }
 
           # What a user's machine does: trust only the published key, require
