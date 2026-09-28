@@ -17,25 +17,31 @@
 # does not announce itself; it shows up as misrendering or a crash inside a Qt
 # application, which on this distribution could be the installer.
 #
-# So the dependency is pinned to the exact qt6-base this was built against.
+# So the dependency is pinned to the qt6-base build this was built against.
 # `pacman -Syu` will then refuse to upgrade Qt until a matching cutecosmic is
 # published, which is loud and fixable. The alternative — an unpinned
 # dependency — is silent breakage in someone else's Calamares session.
 #
+# The pin is a range, not "=": >= the Arch build, < its next pkgrel. CachyOS's
+# optimised repositories rebuild the same source with a sub-release —
+# [cachyos-extra-v3] and -v4 carry qt6-base 6.11.2-3.1 for Arch's 6.11.2-3 —
+# and an exact pin made magnetar-desktop uninstallable on those CPUs. Any new
+# pkgrel or pkgver is still refused.
+#
 # Rebuilding is the maintenance cost of shipping this. On every qt6-base bump:
 #   1. rebuild this package against the new Qt
-#   2. update the pinned version below
+#   2. update both bounds below
 #   3. publish both together
 pkgname=cutecosmic
 pkgver=0.2.0
-pkgrel=1
+pkgrel=2
 pkgdesc="Qt platform theme for the COSMIC desktop"
 arch=('x86_64')
 url="https://github.com/IgKh/cutecosmic"
 license=('GPL-3.0-or-later')
 
 depends=(
-  'qt6-base=6.11.2-3'
+  'qt6-base>=6.11.2-3' 'qt6-base<6.11.2-4'
   'qt6-declarative'
 )
 makedepends=('cargo' 'cmake' 'git')

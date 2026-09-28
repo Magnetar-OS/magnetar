@@ -31,3 +31,8 @@ configuration. The applications keep their own changelogs.
 - `magnetar-repo-audit` recognises ALHP by its real repository names
   (`[core-x86-64-v3]` and so on) and the CachyOS v4 set, so ALHP enabled
   alongside CachyOS's optimised repositories fails the audit as documented.
+- `magnetar-desktop` installs on x86-64-v3 and -v4 machines. `cutecosmic`
+  required exactly `qt6-base=6.11.2-3`, which CachyOS's optimised repositories
+  replace with their `6.11.2-3.1` rebuild, so nothing could satisfy it there.
+  The pin now accepts sub-rebuilds of the same Qt build and still refuses any
+  other.
