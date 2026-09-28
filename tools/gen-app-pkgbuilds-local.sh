@@ -38,7 +38,7 @@ while IFS='|' read -r name desc extradeps _extraopt pkgname_released; do
   # Siblings the app references by relative path. Read out of Cargo.toml
   # rather than listed here: the set changes as the suite is refactored, and a
   # stale list fails as a confusing dependency error deep in a build log.
-  mapfile -t sibs < <(grep -oE 'path = "\.\./[A-Za-z0-9_-]+' "$src_root/$name/Cargo.toml" \
+  mapfile -t sibs < <(grep -E '^[^#]*path = "\.\./' "$src_root/$name/Cargo.toml" | grep -oE 'path = "\.\./[A-Za-z0-9_-]+' \
                        | sed 's|path = "\.\./||' | sort -u)
   for s in "${sibs[@]}"; do
     [[ -d $src_root/$s ]] || { echo "  WARN $name: sibling '$s' missing at $src_root/$s" >&2; }
