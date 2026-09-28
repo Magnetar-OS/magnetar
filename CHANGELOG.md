@@ -28,3 +28,6 @@ configuration. The applications keep their own changelogs.
 - The canonical `/usr/share/magnetar/pacman.conf` no longer sets `HoldDir`,
   which is not a pacman option; every pacman command on a machine that
   adopted the file printed a warning about it.
+- `magnetar-repo-audit` recognises ALHP by its real repository names
+  (`[core-x86-64-v3]` and so on) and the CachyOS v4 set, so ALHP enabled
+  alongside CachyOS's optimised repositories fails the audit as documented.

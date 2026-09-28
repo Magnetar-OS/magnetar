@@ -20,5 +20,5 @@ printf '#!/bin/sh\nexit 0\n' > "$w/bin/pacman"
 chmod +x "$w/bin/"*
 rc=0; out=$(PATH="$w/bin:$PATH" MAGNETAR_REPO_OVERRIDES=/dev/null bash "$A" 2>&1) || rc=$?
 grep -q 'ALHP and the CachyOS optimised repos are both enabled' <<<"$out" && [[ $rc -eq 1 ]] \
-  || { echo "FAIL: rc=$rc"; sed 's/^/    /' <<<"$out"; exit 1; }
+  || { echo "FAIL: rc=$rc"; printf '    %s\n' "$out"; exit 1; }
 echo PASS
