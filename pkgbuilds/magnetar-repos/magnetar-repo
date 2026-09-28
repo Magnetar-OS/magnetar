@@ -71,14 +71,19 @@ declare -A OWNERS=(
 )
 
 # Repositories whose key ships in a keyring package living inside the
-# repository it verifies. Same bootstrap problem as chaotic-aur: the package
-# cannot be fetched until the repo works, and the repo does not work until the
-# key is trusted. Named here so enable() can say so plainly instead of failing
-# with a signature error.
+# repository it verifies, and that have no fingerprint in KEYS to import
+# instead. Same bootstrap problem as chaotic-aur: the package cannot be fetched
+# until the repo works, and the repo does not work until the key is trusted.
+# Named here so enable() can say so plainly instead of failing with a
+# signature error.
+#
+# arch4edu also ships arch4edu-keyring, but its key is in KEYS: importing that
+# is the trust step, and the keyring package can only be installed once the
+# repository is enabled — so it is not listed here, or enabling could never
+# succeed on a machine that does not have it yet.
 declare -A KEYRING_PKG=(
   [garuda]="garuda-keyring"
   [Reborn-OS]="rebornos-keyring"
-  [arch4edu]="arch4edu-keyring"
 )
 
 ALL_REPOS=(chaotic-aur endeavouros garuda orhun quarry nemesis_repo arch4edu ownstuff andontie-aur Reborn-OS valve)
