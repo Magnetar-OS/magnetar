@@ -97,6 +97,28 @@ jobs:
 
       - uses: actions/checkout@v7.0.1
 
+      # cutecosmic is pinned to the qt6-base build it was compiled against
+      # (see its PKGBUILD). When [extra] moves Qt, makepkg below fails with a
+      # bare "could not satisfy dependencies"; say what it means instead.
+      - name: qt6-base still matches cutecosmic's pin
+        if: matrix.pkg == 'cutecosmic'
+        shell: bash
+        run: |
+          set -euo pipefail
+          have="$(pacman -Si extra/qt6-base | awk -F': ' '/^Version/ {print $2}')"
+          # Sourced, not makepkg --printsrcinfo: this step runs as root.
+          mapfile -t pins < <(. pkgbuilds/cutecosmic/PKGBUILD && printf '%s\n' "${depends[@]}" | sed -nE 's/^qt6-base([<>=]+.*)$/\1/p')
+          [ "${#pins[@]}" -gt 0 ] || { echo "::error::cutecosmic has no versioned qt6-base dependency"; exit 1; }
+          for c in "${pins[@]}"; do
+            op="${c%%[0-9]*}"; v="${c#"$op"}"; r="$(vercmp "$have" "$v")"
+            case "$op" in '>=') ok=$(( r >= 0 )) ;; '<') ok=$(( r < 0 )) ;; '=') ok=$(( r == 0 )) ;; *) ok=0 ;; esac
+            if [ "$ok" -ne 1 ]; then
+              echo "::error::[extra] has qt6-base $have, outside cutecosmic's pin (${pins[*]}). Rebuild cutecosmic against it, move both bounds in pkgbuilds/cutecosmic/PKGBUILD, bump pkgrel. Until then pacman -Syu on a machine with magnetar-desktop cannot take the new Qt."
+              exit 1
+            fi
+          done
+          echo "qt6-base $have satisfies ${pins[*]}"
+
       - name: Build
         run: |
           useradd -m builder
@@ -121,10 +143,15 @@ jobs:
   # A version is published once: to ship a change, bump pkgver or pkgrel.
   # Rebuilding an unchanged PKGBUILD therefore publishes nothing, which is what
   # makes the nightly run safe.
+  # Runs when some legs failed, too: a Qt bump that breaks cutecosmic must not
+  # freeze every other distribution package. The failed leg still fails the
+  # run; its package is simply absent from dist/ and publishes next time.
   publish:
     name: Publish to [magnetar]
     needs: build
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    if: >-
+      !cancelled() && needs.build.result != 'skipped'
+      && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     container: { image: 'archlinux:base-devel' }
     # Every app's release also pushes to arch-repo; this only serialises the
