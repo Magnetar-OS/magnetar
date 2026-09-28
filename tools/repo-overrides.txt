@@ -35,6 +35,8 @@ cachyos-extra-v3:*
 # Boot and early userspace
 cachyos:mkinitcpio
 cachyos:limine
+# Joined by 2026-09-28; CachyOS's installer pacstraps it with its theme.
+cachyos:plymouth
 cachyos:amd-ucode
 cachyos:archlinux-keyring
 # pacman itself — CachyOS carries its own build.
