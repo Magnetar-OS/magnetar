@@ -49,3 +49,8 @@ configuration. The applications keep their own changelogs.
   other.
 - `magnetar-desktop` lists Pencil and Pocket among its optional dependencies,
   with the other seven suite apps.
+- An installed system shows the Magnetar logo wherever `os-release`'s
+  `LOGO=magnetar` is read (COSMIC Settings' About page, fastfetch): the icon
+  moved from the installer package, which an installed system does not have,
+  to `magnetar-branding`. The live ISO's `os-release` uses Magnetar's colour,
+  as the installed one does.

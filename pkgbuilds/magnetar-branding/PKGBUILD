@@ -18,8 +18,8 @@
 # reboot-required hooks, while the three branding hooks call us instead.
 pkgname=magnetar-branding
 pkgver=20260908
-pkgrel=1
-pkgdesc="Magnetar system identity: os-release, lsb-release and issue"
+pkgrel=2
+pkgdesc="Magnetar system identity: os-release, lsb-release, issue and the logo"
 arch=('any')
 url="https://github.com/Magnetar-OS/magnetar"
 license=('GPL-3.0-or-later')
@@ -40,4 +40,10 @@ package() {
   for h in os-release lsb-release cachyos-branding; do
     install -Dm644 "$startdir/hooks/$h.hook" "$pkgdir/etc/pacman.d/hooks/$h.hook"
   done
+
+  # os-release says LOGO=magnetar; this is the icon that name resolves to, for
+  # COSMIC Settings' About page, fastfetch and anything else that reads it.
+  # Here rather than in magnetar-calamares, which an installed system lacks.
+  install -Dm644 "$startdir/magnetar.svg" \
+    "$pkgdir/usr/share/icons/hicolor/scalable/apps/magnetar.svg"
 }

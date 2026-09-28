@@ -18,8 +18,10 @@ license=('GPL-3.0-or-later')
 
 # magnetar-repos: the installer writes the target's pacman.conf with its
 # magnetar-pacman-conf. magnetar-keyring: the live keyring must trust
-# [magnetar] before the target's is copied from it.
-depends=('cachyos-calamares-next' 'python' 'polkit' 'magnetar-repos' 'magnetar-keyring')
+# [magnetar] before the target's is copied from it. magnetar-branding: the
+# desktop entry's Icon=magnetar, which moved there from this package.
+depends=('cachyos-calamares-next' 'python' 'polkit' 'magnetar-repos' 'magnetar-keyring'
+         'magnetar-branding>=20260908-2')
 optdepends=('inxi: hardware summary in the install log')
 
 source=()
@@ -46,8 +48,4 @@ package() {
   install -Dm755 "$startdir/magnetar-install" "$pkgdir/usr/bin/magnetar-install"
   install -Dm644 "$startdir/com.magnetaros.Install.desktop" \
     "$pkgdir/usr/share/applications/com.magnetaros.Install.desktop"
-
-  # The installer's icon, also used by the desktop entry.
-  install -Dm644 "$startdir/branding/logo.svg" \
-    "$pkgdir/usr/share/icons/hicolor/scalable/apps/magnetar.svg"
 }

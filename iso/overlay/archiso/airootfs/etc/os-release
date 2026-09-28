@@ -6,7 +6,7 @@ ID=magnetar
 # cachyos-hooks) should recognise this system as one.
 ID_LIKE="cachyos arch"
 BUILD_ID=rolling
-ANSI_COLOR="38;2;23;147;209"
+ANSI_COLOR="38;2;42;169;224"
 HOME_URL="https://magnetaros.com"
 DOCUMENTATION_URL="https://github.com/Magnetar-OS/magnetar/blob/main/docs"
 SUPPORT_URL="https://github.com/Magnetar-OS/magnetar/issues"
