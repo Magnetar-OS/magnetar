@@ -10,13 +10,16 @@
 # its files would be undone at exactly the wrong moment.
 pkgname=magnetar-calamares
 pkgver=0.1.0
-pkgrel=5
+pkgrel=6
 pkgdesc="Magnetar installer branding and package selection for Calamares"
 arch=('any')
 url="https://magnetaros.com"
 license=('GPL-3.0-or-later')
 
-depends=('cachyos-calamares-next' 'python' 'polkit')
+# magnetar-repos: the installer writes the target's pacman.conf with its
+# magnetar-pacman-conf. magnetar-keyring: the live keyring must trust
+# [magnetar] before the target's is copied from it.
+depends=('cachyos-calamares-next' 'python' 'polkit' 'magnetar-repos' 'magnetar-keyring')
 optdepends=('inxi: hardware summary in the install log')
 
 source=()
@@ -37,6 +40,8 @@ package() {
     "$pkgdir/usr/share/magnetar/calamares/modules/netinstall.yaml"
   install -Dm644 "$startdir/modules/displaymanager.conf" \
     "$pkgdir/usr/share/magnetar/calamares/modules/displaymanager.conf"
+  install -Dm644 "$startdir/assemble-config.py" \
+    "$pkgdir/usr/share/magnetar/calamares/assemble-config.py"
 
   install -Dm755 "$startdir/magnetar-install" "$pkgdir/usr/bin/magnetar-install"
   install -Dm644 "$startdir/com.magnetaros.Install.desktop" \

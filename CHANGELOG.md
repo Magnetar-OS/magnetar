@@ -17,6 +17,17 @@ configuration. The applications keep their own changelogs.
 
 ### Fixed
 
+- The installer installs Magnetar. Calamares read CachyOS's package list
+  (fetched from CachyOS's GitHub, falling back to CachyOS's own file) instead
+  of Magnetar's, so an install got no COSMIC, no `magnetar-*` packages and no
+  suite; it now reads only Magnetar's list.
+- The installed system's `/etc/pacman.conf` carries `[magnetar]`, between the
+  CPU's optimised CachyOS repositories and `[cachyos]`, with the Magnetar key
+  trusted. The installer used CachyOS's file, which has no `[magnetar]`, so
+  the Magnetar packages could not be found during the install and would never
+  have been updated after it. The installed file is the canonical one,
+  rendered for the machine's CPU by `magnetar-pacman-conf`.
+
 - `magnetar-settings` lists `fastfetch` and `cutecosmic` as optional
   dependencies again; a later `optdepends=` reassignment had dropped them.
 - `magnetar-repo enable arch4edu` works on a machine that does not have

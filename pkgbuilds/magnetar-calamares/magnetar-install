@@ -8,9 +8,11 @@
 # files means inheriting the maintenance of all of them and silently falling
 # behind their fixes.
 #
-# So: take theirs, lay ours over it, patch the two lines in settings.conf that
-# have to change, and run Calamares against the result. Every patch asserts on
-# the text it expects and fails loudly if CachyOS has moved.
+# So: take theirs, lay ours over it, patch the lines that have to change
+# (assemble-config.py: branding, no desktop chooser, Magnetar's package list,
+# a target pacman.conf that carries [magnetar]), and run Calamares against the
+# result. Every patch asserts on the text it expects and fails loudly if
+# CachyOS has moved.
 set -euo pipefail
 
 CONFDIR=/run/magnetar-calamares
@@ -38,7 +40,9 @@ else
 fi
 sudo pacman -Sy --noconfirm archlinux-keyring cachyos-keyring
 sudo pacman-key --init
-sudo pacman-key --populate archlinux cachyos
+# magnetar too: the target's keyring is a copy of this one, and [magnetar] is
+# SigLevel = Required.
+sudo pacman-key --populate archlinux cachyos magnetar
 sudo timedatectl set-ntp true || true
 
 echo "==> ensuring Calamares is present"
@@ -53,40 +57,7 @@ sudo cp /usr/share/calamares/settings_online.conf "$CONFDIR/settings.conf"
 # Our module overrides win over CachyOS's.
 sudo cp -a "$OURS/modules/." "$CONFDIR/modules/"
 
-sudo python3 - "$CONFDIR/settings.conf" <<'PY'
-import sys, pathlib, re
-
-p = pathlib.Path(sys.argv[1])
-s = p.read_text()
-problems = []
-
-# 1. Branding.
-if "branding: magnetar" not in s:
-    if "branding: cachyos" not in s:
-        problems.append("no 'branding: cachyos' line to replace")
-    else:
-        s = s.replace("branding: cachyos", "branding: magnetar")
-
-# 2. Drop the desktop chooser. Magnetar installs COSMIC; a step offering
-#    Plasma or GNOME instead would install a system this project does not
-#    build, test or support.
-before = s
-s = re.sub(r"^\s*-\s*packagechooser@desktop\s*$\n", "", s, flags=re.M)
-s = re.sub(r"^- id:\s*desktop\n\s*module:\s*packagechooser\n\s*config:\s*packagechooser_desktop\.conf\n",
-           "", s, flags=re.M)
-if s == before and "packagechooser@desktop" in before:
-    problems.append("could not remove the desktop packagechooser step")
-
-if problems:
-    sys.stderr.write("magnetar-install: CachyOS's settings.conf has changed:\n")
-    for x in problems:
-        sys.stderr.write(f"  - {x}\n")
-    sys.stderr.write("  Update magnetar-install before shipping another ISO.\n")
-    raise SystemExit(1)
-
-p.write_text(s)
-print("    settings.conf: branding -> magnetar, desktop chooser removed")
-PY
+sudo python3 "$OURS/assemble-config.py" "$CONFDIR"
 
 mkdir -p "$(dirname "$LOG")"
 {
