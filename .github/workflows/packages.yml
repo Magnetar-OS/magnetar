@@ -39,10 +39,30 @@ jobs:
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           . ./branding.env
-          git clone --depth 1 --branch "$UPSTREAM_ISO_REF" "$UPSTREAM_ISO_REPO" /tmp/up
+          git init -q /tmp/up
+          git -C /tmp/up fetch -q --depth 1 "$UPSTREAM_ISO_REPO" "$UPSTREAM_ISO_REF"
+          git -C /tmp/up checkout -q FETCH_HEAD
           python3 tools/gen-iso-packages.py /tmp/up/archiso/packages_desktop.x86_64
           git diff --exit-code -- iso/overlay/archiso/packages_magnetar.x86_64 \
             || { echo "::error::CachyOS changed packages_desktop.x86_64. Re-run tools/gen-iso-packages.py, review the diff, and commit."; exit 1; }
+
+  # The ISO builds from the pinned UPSTREAM_ISO_REF; this says when CachyOS has
+  # moved past it. Not a gate for the packages below: it fails on its own, and
+  # the fix is a reviewed bump in branding.env.
+  upstream:
+    name: CachyOS-Live-ISO has not moved past the pin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          . ./branding.env
+          head="$(git ls-remote "$UPSTREAM_ISO_REPO" "refs/heads/$UPSTREAM_ISO_BRANCH" | cut -f1)"
+          [ -n "$head" ] || { echo "::error::Could not read $UPSTREAM_ISO_BRANCH of $UPSTREAM_ISO_REPO"; exit 1; }
+          if [ "$head" != "$UPSTREAM_ISO_REF" ]; then
+            echo "::error::CachyOS-Live-ISO $UPSTREAM_ISO_BRANCH is at $head; the ISO is pinned to $UPSTREAM_ISO_REF. Set UPSTREAM_ISO_REF to the new commit, run iso/sync.sh and tools/gen-iso-packages.py, review the diffs, and commit."
+            exit 1
+          fi
+          echo "Pinned to $UPSTREAM_ISO_BRANCH ($head)."
 
   build:
     name: ${{ matrix.pkg }}

@@ -19,20 +19,24 @@ work="${MAGNETAR_ISO_WORK:-$root/build/iso-src}"
 overlay="$root/iso/overlay"
 
 echo "==> upstream: $UPSTREAM_ISO_REPO @ $UPSTREAM_ISO_REF"
-if [[ -d $work/.git ]]; then
-  git -C "$work" fetch --depth 1 origin "$UPSTREAM_ISO_REF"
-  # Hard reset, not checkout. The patches below rewrite tracked files, and a
-  # plain checkout leaves those edits in place — so when OUR replacement text
-  # changes (an org rename, say), the patch matches neither the pristine text
-  # nor the already-applied text, and sync fails on a tree it created itself.
-  # Resetting to upstream every run makes this idempotent from any state.
-  git -C "$work" reset -q --hard FETCH_HEAD
-  git -C "$work" clean -qfd
-else
+# The ref is a commit, which `git clone --branch` cannot take: init once and
+# fetch the commit itself (GitHub serves any reachable commit by hash).
+if [[ ! -d $work/.git ]]; then
   rm -rf "$work"
-  mkdir -p "$(dirname "$work")"
-  git clone --depth 1 --branch "$UPSTREAM_ISO_REF" "$UPSTREAM_ISO_REPO" "$work"
+  mkdir -p "$work"
+  git -C "$work" init -q
+  git -C "$work" remote add origin "$UPSTREAM_ISO_REPO"
 fi
+git -C "$work" fetch -q --depth 1 origin "$UPSTREAM_ISO_REF"
+# Hard reset, not checkout. The patches below rewrite tracked files, and a
+# plain checkout leaves those edits in place — so when OUR replacement text
+# changes (an org rename, say), the patch matches neither the pristine text
+# nor the already-applied text, and sync fails on a tree it created itself.
+# Resetting to upstream every run makes this idempotent from any state.
+git -C "$work" reset -q --hard FETCH_HEAD
+git -C "$work" clean -qfd
+[[ $(git -C "$work" rev-parse HEAD) == "$UPSTREAM_ISO_REF" ]] \
+  || { echo "sync.sh: $work is not at $UPSTREAM_ISO_REF" >&2; exit 1; }
 echo "    at $(git -C "$work" rev-parse --short HEAD)"
 
 echo "==> applying overlay"

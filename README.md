@@ -41,8 +41,8 @@ fall behind silently, and the symptom arrives months later as an ISO that does
 not boot on somebody's laptop. Every generator has a CI job that fails when its
 output is stale.
 
-**The ISO is an overlay, not a fork.** `iso/sync.sh` clones CachyOS-Live-ISO at
-the pinned ref and applies eight exact-match patches. When CachyOS changes text
+**The ISO is an overlay, not a fork.** `iso/sync.sh` fetches CachyOS-Live-ISO at
+the commit pinned in `branding.env` and applies exact-match patches. When CachyOS changes text
 we patch, the script fails and names the file. That failure is the feature —
 the alternative is an ISO that is quietly wrong.
 
