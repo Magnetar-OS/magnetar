@@ -271,7 +271,9 @@ jobs:
             ( cd x86_64
               rm -f "$REPO.db" "$REPO.files"
               repo-add -q "$REPO.db.tar.gz" "${ADDED[@]}"
-              rm -f "$REPO.db" "$REPO.files" ./*.old
+              # repo-add keeps the previous database as *.old and renames its
+              # signature to *.old.sig; neither belongs in the published tree.
+              rm -f "$REPO.db" "$REPO.files" ./*.old ./*.old.sig
               cp "$REPO.db.tar.gz" "$REPO.db"
               cp "$REPO.files.tar.gz" "$REPO.files"
               for db in "$REPO.db" "$REPO.db.tar.gz" "$REPO.files" "$REPO.files.tar.gz"; do sign "$db"; done
