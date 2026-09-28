@@ -133,8 +133,10 @@ echo
 echo "== forbidden combinations =="
 has_alhp=0; has_cachyos_opt=0
 for r in "${repos[@]}"; do
-  [[ $r == *alhp* ]] && has_alhp=1
-  [[ $r == cachyos-*znver* || $r == cachyos-*v3* ]] && has_cachyos_opt=1
+  # ALHP names its repositories after the Arch one and the level, e.g.
+  # [core-x86-64-v3]; none of them contains "alhp".
+  [[ $r == *alhp* || $r =~ ^(core|extra|multilib)-x86-64-v[234]$ ]] && has_alhp=1
+  [[ $r == cachyos-*znver* || $r == cachyos-*v3* || $r == cachyos-*v4* ]] && has_cachyos_opt=1
 done
 if (( has_alhp && has_cachyos_opt )); then
   echo "  FAIL ALHP and the CachyOS optimised repos are both enabled."
