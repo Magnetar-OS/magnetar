@@ -9,6 +9,7 @@ w=$(mktemp -d); mkdir -p "$w/d"
 sed -nE 's/^#   (\[options\]|IgnorePkg = .*)$/\1/p' "$R/repos.d/99-local.conf" > "$w/d/99-local.conf"
 grep -q IgnorePkg "$w/d/99-local.conf" || { echo "FAIL: no IgnorePkg example found"; exit 1; }
 sed -n '/^\[options\]/,/^SigLevel/p' "$R/pacman.conf" | grep -vE '^(HoldPkg|DownloadUser)' > "$w/pacman.conf"
+# shellcheck disable=SC2016 # $repo is pacman's, not the shell's
 printf '\n[core]\nServer = https://example.invalid/$repo\n\nInclude = %s/d/*.conf\n' "$w" >> "$w/pacman.conf"
 out=$(pacman-conf --config "$w/pacman.conf" IgnorePkg 2>&1)
 rm -rf "$w"

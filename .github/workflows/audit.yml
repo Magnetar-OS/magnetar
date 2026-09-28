@@ -2,12 +2,57 @@ name: Repo policy
 
 on:
   push:
-    paths: ['pkgbuilds/magnetar-repos/**', 'tools/repo-audit.sh', 'tools/repo-overrides.txt']
+    paths: ['pkgbuilds/**', 'tools/**', 'tests/**', 'iso/**', 'branding.env', '.github/workflows/audit.yml']
   pull_request:
-    paths: ['pkgbuilds/magnetar-repos/**', 'tools/repo-audit.sh', 'tools/repo-overrides.txt']
+    paths: ['pkgbuilds/**', 'tools/**', 'tests/**', 'iso/**', 'branding.env', '.github/workflows/audit.yml']
   workflow_dispatch:
 
 jobs:
+  # Static checks and tests/. The tests reproduce bugs that shipped: a
+  # PKGBUILD that lost optdepends, a pacman.conf that warned on every run, an
+  # installer that never loaded Magnetar's package list.
+  checks:
+    name: Shell, PKGBUILDs and tests
+    runs-on: ubuntu-latest
+    container: { image: 'archlinux:base-devel' }
+    steps:
+      - name: Add the CachyOS repository
+        # tests/installer-config.sh runs against the real cachyos-calamares-next.
+        run: |
+          pacman-key --init
+          pacman-key --recv-keys F3B607488DB35A47 --keyserver keyserver.ubuntu.com
+          pacman-key --lsign-key F3B607488DB35A47
+          sed -i '/^\[core\]$/i[cachyos]\nServer = https://mirror.cachyos.org/repo/$arch/$repo\n' /etc/pacman.conf
+          pacman -Syu --noconfirm git python shellcheck
+
+      - uses: actions/checkout@v7.0.1
+
+      - name: shellcheck
+        run: |
+          shellcheck tools/*.sh tests/*.sh iso/sync.sh \
+            pkgbuilds/magnetar-repos/magnetar-repo pkgbuilds/magnetar-repos/magnetar-pacman-conf \
+            pkgbuilds/magnetar-settings/magnetar-apply-defaults \
+            pkgbuilds/magnetar-calamares/magnetar-install \
+            pkgbuilds/magnetar-branding/magnetar-branding
+          shellcheck -s bash pkgbuilds/*/*.install
+
+      # makepkg refuses to run as root, and the tests call it.
+      - name: Tests
+        run: |
+          useradd -m builder
+          chown -R builder:builder .
+          python3 -m py_compile pkgbuilds/magnetar-calamares/assemble-config.py tools/*.py
+          for p in pkgbuilds/*/PKGBUILD; do
+            (cd "$(dirname "$p")" && sudo -u builder makepkg --printsrcinfo > /dev/null) \
+              || { echo "::error::$p does not parse"; exit 1; }
+          done
+          failed=0
+          for t in tests/*.sh; do
+            echo "::group::$t"
+            if sudo -u builder bash "$t"; then echo "::endgroup::"; else echo "::endgroup::"; echo "::error::$t failed"; failed=1; fi
+          done
+          exit "$failed"
+
   audit:
     name: Repository order and locks
     runs-on: ubuntu-latest

@@ -46,6 +46,7 @@ echo "firmware : $firmware"
 vm="$root/build/vm"
 mkdir -p "$vm"
 
+# shellcheck disable=SC2054 # the commas are QEMU's option syntax, not array separators
 args=(
   -enable-kvm
   -machine q35,accel=kvm
@@ -119,6 +120,7 @@ else
   # reason.
   mkdir -p "$vm"
   rm -f "$vm/monitor.sock"
+  # shellcheck disable=SC2054 # QEMU option syntax
   args+=(
     -device virtio-vga-gl -display gtk,gl=on
     -monitor "unix:$vm/monitor.sock,server,nowait"

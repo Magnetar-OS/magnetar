@@ -76,4 +76,4 @@ rm -f "$repo/$DISTRO_REPO_NAME.db"* "$repo/$DISTRO_REPO_NAME.files"*
 }
 
 echo
-ls -1 "$repo" | grep -E '\.(db|files)(\.tar\.zst)?(\.sig)?$' | sed 's/^/  /'
+find "$repo" -maxdepth 1 -regextype posix-extended -regex '.*\.(db|files)(\.tar\.zst)?(\.sig)?$' -printf '  %f\n' | sort
