@@ -118,7 +118,8 @@ cmd_status() {
 }
 
 _toggle() {
-  local repo="$1" action="$2" f="${FILES[$repo]}"
+  local repo="$1" action="$2"
+  local f="${FILES[$repo]}"
   python3 - "$f" "$repo" "$action" <<'PY'
 import sys, pathlib
 path, repo, action = sys.argv[1], sys.argv[2], sys.argv[3]
@@ -181,8 +182,6 @@ MSG
   if [[ -n $kr ]]; then
     if pacman -Qq "$kr" >/dev/null 2>&1; then
       echo "    $kr already installed"
-    elif [[ $repo == chaotic-aur ]]; then
-      : # handled by the fingerprint path above
     else
       echo "==> $repo's key ships in $kr, which lives inside $repo itself."
       if ! pacman -S --needed --noconfirm "$kr" 2>/dev/null; then
