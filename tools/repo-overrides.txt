@@ -16,9 +16,16 @@
 # --- The optimised rebuilds ------------------------------------------------
 # These exist to replace core/extra with x86-64-v3/v4 builds. Shadowing every
 # name they carry is the entire feature.
+# One set is enabled per machine, by CPU (magnetar-pacman-conf).
 cachyos-znver4:*
 cachyos-core-znver4:*
 cachyos-extra-znver4:*
+cachyos-v4:*
+cachyos-core-v4:*
+cachyos-extra-v4:*
+cachyos-v3:*
+cachyos-core-v3:*
+cachyos-extra-v3:*
 
 # --- CachyOS proper --------------------------------------------------------
 # Verified against cachyos 2026-09-07. Listed individually rather than with a

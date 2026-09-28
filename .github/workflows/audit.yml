@@ -27,14 +27,18 @@ jobs:
           # The third-party drop-ins ship commented out, so their mirrorlists
           # (chaotic, endeavouros, reborn) are not read — and are not in any
           # repository configured here, which failed this whole transaction.
-          pacman -Syu --noconfirm cachyos-keyring cachyos-mirrorlist cachyos-v4-mirrorlist
+          pacman -Syu --noconfirm cachyos-keyring cachyos-mirrorlist cachyos-v3-mirrorlist cachyos-v4-mirrorlist
 
           # [magnetar] is SigLevel = Required. Trust the key from the keyring
           # package's source, as the ISO job does.
           pacman-key --add pkgbuilds/magnetar-keyring/magnetar.asc
           pacman-key --lsign-key 382D984841F8C8A2BFB952675623FAF3DF36FFAF
 
-          cp pkgbuilds/magnetar-repos/pacman.conf /etc/pacman.conf
+          # Rendered the way the installer writes it: the optimised set this
+          # runner's CPU supports, if any.
+          sed "s|^CANONICAL=.*|CANONICAL=$PWD/pkgbuilds/magnetar-repos/pacman.conf|" \
+            pkgbuilds/magnetar-repos/magnetar-pacman-conf > /tmp/magnetar-pacman-conf
+          bash /tmp/magnetar-pacman-conf /etc/pacman.conf
           mkdir -p /etc/pacman.d/magnetar-repos.d
           cp pkgbuilds/magnetar-repos/repos.d/*.conf /etc/pacman.d/magnetar-repos.d/
           pacman -Sy

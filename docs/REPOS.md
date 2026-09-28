@@ -31,8 +31,11 @@ Three consequences:
 
 ```ini
 # 1. CPU-optimised rebuilds of core/extra. Must outrank the repos they
-#    rebuild or CachyOS's reason for existing is bypassed.
-[cachyos-znver4] [cachyos-core-znver4] [cachyos-extra-znver4]
+#    rebuild or CachyOS's reason for existing is bypassed. Exactly one set,
+#    picked by CPU (see below):
+[cachyos-znver4] [cachyos-core-znver4] [cachyos-extra-znver4]   # Zen 4/5
+[cachyos-v4]     [cachyos-core-v4]     [cachyos-extra-v4]       # other x86-64-v4
+[cachyos-v3]     [cachyos-core-v3]     [cachyos-extra-v3]       # x86-64-v3
 
 # 2. This distribution, packages and applications together.
 [magnetar]
@@ -60,6 +63,14 @@ Three consequences:
 #
 # 80 valve          locked: Usage = Sync Search, cannot install or upgrade
 ```
+
+Which optimised set a machine can run is a hardware fact — a znver4 or v4
+package on a CPU without AVX-512 dies with SIGILL — so the canonical file ships
+all three commented out. `magnetar-pacman-conf` prints it with the one set this
+CPU supports enabled, using the same detection as CachyOS's installer (Zen 4/5
+with AVX-512 → znver4, else x86-64-v4 → v4, else x86-64-v3 → v3, else none).
+The Magnetar installer writes `/etc/pacman.conf` with it; on an existing
+machine, compare with `diff -u /etc/pacman.conf <(magnetar-pacman-conf)`.
 
 `*-testing` repositories are absent on purpose. CachyOS's v3/v4 repos already
 track ahead of Arch stable; layering Arch testing on top of that produces a

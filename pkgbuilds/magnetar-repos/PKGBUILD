@@ -6,8 +6,10 @@
 # on its own.
 #
 # This package does NOT overwrite /etc/pacman.conf on upgrade. It ships the
-# canonical file to /usr/share/magnetar/pacman.conf and installs the drop-ins;
-# adopting a new canonical pacman.conf is an explicit act (see the .install).
+# canonical file to /usr/share/magnetar/pacman.conf, magnetar-pacman-conf to
+# render it for this CPU, and the drop-ins; adopting a new canonical
+# pacman.conf is an explicit act (see the .install). The installer is the one
+# place that writes /etc/pacman.conf, with magnetar-pacman-conf.
 pkgname=magnetar-repos
 pkgver=0.1.0
 pkgrel=5
@@ -31,12 +33,13 @@ depends=(
   # the keyring itself. It has to arrive as a dependency, not from the repo it
   # protects.
   'magnetar-keyring'
-  'cachyos-keyring' 'cachyos-mirrorlist' 'cachyos-v4-mirrorlist'
+  # Both optimised mirrorlists: magnetar-pacman-conf picks the v3 or the v4
+  # set by CPU, and an Include of a missing mirrorlist stops pacman outright.
+  'cachyos-keyring' 'cachyos-mirrorlist' 'cachyos-v3-mirrorlist' 'cachyos-v4-mirrorlist'
   'python'
 )
 
 optdepends=(
-  'cachyos-v3-mirrorlist: x86-64-v3 rebuilds, for CPUs without AVX-512'
   'endeavouros-keyring: required before `magnetar-repo enable endeavouros`'
   'endeavouros-mirrorlist: required before `magnetar-repo enable endeavouros`'
   'chaotic-keyring: fetched automatically by `magnetar-repo enable chaotic-aur`'
@@ -75,11 +78,13 @@ source=()
 sha256sums=()
 
 package() {
-  # The canonical file, for reference and for the installer to copy into
-  # place on a fresh system. Deliberately not installed as /etc/pacman.conf:
-  # overwriting a live pacman.conf on upgrade would silently revert whatever
-  # the machine's owner had changed, including their locks.
+  # The canonical file, rendered for the machine's CPU by magnetar-pacman-conf
+  # — which the installer uses to write /etc/pacman.conf on a fresh system.
+  # Deliberately not installed as /etc/pacman.conf: overwriting a live
+  # pacman.conf on upgrade would silently revert whatever the machine's owner
+  # had changed, including their locks.
   install -Dm644 "$startdir/pacman.conf" "$pkgdir/usr/share/magnetar/pacman.conf"
+  install -Dm755 "$startdir/magnetar-pacman-conf" "$pkgdir/usr/bin/magnetar-pacman-conf"
 
   # Every drop-in, generated from repos.d/. Adding a repository is a file,
   # not a code change.

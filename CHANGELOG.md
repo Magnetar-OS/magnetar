@@ -6,6 +6,15 @@ configuration. The applications keep their own changelogs.
 
 ## [Unreleased]
 
+### Changed
+
+- The canonical `/usr/share/magnetar/pacman.conf` no longer enables the
+  CachyOS znver4 repositories for every machine: all three optimised sets
+  (znver4, v4, v3) ship commented out, and the new `magnetar-pacman-conf`
+  renders the file with the set this CPU can run, using CachyOS's own
+  detection. Adopting the old file on a CPU without AVX-512 installed
+  packages that crash with SIGILL.
+
 ### Fixed
 
 - `magnetar-settings` lists `fastfetch` and `cutecosmic` as optional

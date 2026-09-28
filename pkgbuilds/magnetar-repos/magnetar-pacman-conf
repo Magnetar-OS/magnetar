@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+#
+# magnetar-pacman-conf — the canonical pacman.conf, with this CPU's optimised
+# repositories enabled.
+#
+#   magnetar-pacman-conf                     print it
+#   magnetar-pacman-conf FILE                write it to FILE
+#   magnetar-pacman-conf --no-drop-ins FILE  the same, without the Include of
+#                                            /etc/pacman.d/magnetar-repos.d/
+#
+# /usr/share/magnetar/pacman.conf ships every CachyOS optimised set commented
+# out, because which one a machine can run is a hardware fact: a znver4 or v4
+# package on a CPU without AVX-512 dies with SIGILL. This enables exactly one
+# set, picked with the same tests CachyOS's installer uses
+# (/etc/calamares/scripts/detect-architecture): Zen 4/5 with AVX-512 → znver4,
+# otherwise x86-64-v4 → v4, otherwise x86-64-v3 → v3, otherwise none.
+#
+# MAGNETAR_CPU_LEVEL=znver4|v4|v3|none overrides the detection.
+#
+# --no-drop-ins exists for the installer. pacman treats an Include glob that
+# matches nothing as a fatal error, and the drop-ins arrive with the
+# magnetar-repos package — which the first pacman run on a fresh root is what
+# installs. The installer writes the file without the Include first, and the
+# full file once magnetar-repos is in the target. Every drop-in ships
+# disabled, so the two resolve identically.
+set -euo pipefail
+
+CANONICAL=/usr/share/magnetar/pacman.conf
+DROPIN_INCLUDE='Include = /etc/pacman.d/magnetar-repos.d/*.conf'
+
+die() { echo "magnetar-pacman-conf: $*" >&2; exit 1; }
+
+# Zen 4 (family 0x19, models 0x10-0x1f and 0x60-0xaf) or Zen 5+ (family 0x1a),
+# with AVX-512. Same table as CachyOS's detect-architecture.
+is_zen45() {
+  grep -qw avx512f /proc/cpuinfo 2>/dev/null || return 1
+  local family model
+  family=$(grep -Po 'cpu family\s+:\s+\K[0-9]+' /proc/cpuinfo | head -n1)
+  model=$(grep -Po 'model\s+:\s+\K[0-9]+' /proc/cpuinfo | head -n1)
+  case $family in
+    $((0x19))) (( (model >= 0x10 && model <= 0x1f) || (model >= 0x60 && model <= 0xaf) )) ;;
+    $((0x1a))) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+# glibc's loader lists the x86-64 levels it supports on this CPU as
+# "x86-64-v4 (supported, searched)".
+supports() {
+  /lib/ld-linux-x86-64.so.2 --help 2>/dev/null | grep -q "^  $1 (supported"
+}
+
+cpu_level() {
+  if [[ -n ${MAGNETAR_CPU_LEVEL:-} ]]; then
+    case $MAGNETAR_CPU_LEVEL in
+      znver4|v4|v3|none) echo "$MAGNETAR_CPU_LEVEL"; return ;;
+      *) die "MAGNETAR_CPU_LEVEL must be znver4, v4, v3 or none, not '$MAGNETAR_CPU_LEVEL'" ;;
+    esac
+  fi
+  if is_zen45; then echo znver4
+  elif supports x86-64-v4; then echo v4
+  elif supports x86-64-v3; then echo v3
+  else echo none
+  fi
+}
+
+drop_ins=1
+if [[ ${1:-} == --no-drop-ins ]]; then drop_ins=0; shift; fi
+(( $# <= 1 )) || die "usage: magnetar-pacman-conf [--no-drop-ins] [FILE]"
+[[ -r $CANONICAL ]] || die "$CANONICAL is missing; is magnetar-repos installed?"
+grep -qxF "$DROPIN_INCLUDE" "$CANONICAL" || die "$CANONICAL has no '$DROPIN_INCLUDE' line"
+
+level=$(cpu_level)
+
+# Uncomment the three sections of the chosen set, each "#[name]" line and the
+# "#Include" line directly under it. Everything else passes through untouched.
+out=$(awk -v level="$level" -v drop_ins="$drop_ins" -v inc="$DROPIN_INCLUDE" '
+  function wanted(line) {
+    return level != "none" && \
+      (line == "#[cachyos-" level "]" || line == "#[cachyos-core-" level "]" || line == "#[cachyos-extra-" level "]")
+  }
+  pending && /^#Include = / { print substr($0, 2); pending = 0; next }
+  { pending = 0 }
+  wanted($0) { print substr($0, 2); pending = 1; enabled++; next }
+  !drop_ins && $0 == inc { next }
+  { print }
+  END { if (level != "none" && enabled != 3) exit 3 }
+' "$CANONICAL") || die "$CANONICAL does not carry the three commented [cachyos-*-$level] sections"
+
+if (( $# == 1 )); then
+  printf '%s\n' "$out" > "$1"
+  echo "magnetar-pacman-conf: wrote $1 (CachyOS optimised set: $level)" >&2
+else
+  printf '%s\n' "$out"
+fi
