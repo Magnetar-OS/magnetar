@@ -13,3 +13,6 @@ configuration. The applications keep their own changelogs.
 - `magnetar-repo enable arch4edu` works on a machine that does not have
   `arch4edu-keyring` yet. It used to demand that package, which only exists
   inside the repository being enabled, and exit before enabling it.
+- The `IgnorePkg` example in `/etc/pacman.d/magnetar-repos.d/99-local.conf`
+  carries an `[options]` header. Without it pacman read the line as part of
+  the last repository section and ignored it with a warning.

@@ -196,8 +196,11 @@ removes the repository configuration that everything else depends on.
 Empty by default and it should stay that way. An `IgnorePkg` entry is a
 partial upgrade waiting to happen — on a rolling release it breaks the machine
 eventually, not immediately. If one is ever needed, it belongs in
-`/etc/pacman.d/magnetar-repos.d/99-local.conf` with a comment saying who added
-it, why, and what condition retires it.
+`/etc/pacman.d/magnetar-repos.d/99-local.conf` under an `[options]` header —
+that file is included after the repository sections, and without the header
+pacman reads the line as part of the last repository and ignores it with a
+warning — with a comment saying who added it, why, and what condition retires
+it.
 
 ### Forbidden combinations
 
