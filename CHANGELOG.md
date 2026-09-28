@@ -16,3 +16,6 @@ configuration. The applications keep their own changelogs.
 - The `IgnorePkg` example in `/etc/pacman.d/magnetar-repos.d/99-local.conf`
   carries an `[options]` header. Without it pacman read the line as part of
   the last repository section and ignored it with a warning.
+- The canonical `/usr/share/magnetar/pacman.conf` no longer sets `HoldDir`,
+  which is not a pacman option; every pacman command on a machine that
+  adopted the file printed a warning about it.
