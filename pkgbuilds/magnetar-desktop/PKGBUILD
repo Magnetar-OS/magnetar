@@ -10,7 +10,7 @@
 #                should not be able to block the desktop from installing.
 pkgname=magnetar-desktop
 pkgver=0.1.0
-pkgrel=4
+pkgrel=5
 pkgdesc="Magnetar: COSMIC desktop on CachyOS"
 arch=('any')
 url="https://github.com/Magnetar-OS/magnetar"
@@ -89,6 +89,8 @@ optdepends=(
   'envelope: mail'
   'circle: contacts'
   'slate: calendar and tasks'
+  'pencil: rich text editor'
+  'pocket: passes, tickets and cards'
 
   # Practical extras, not opinions.
   'cachyos-gaming-meta: Proton, Wine and the gaming stack'

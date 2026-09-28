@@ -47,3 +47,5 @@ configuration. The applications keep their own changelogs.
   replace with their `6.11.2-3.1` rebuild, so nothing could satisfy it there.
   The pin now accepts sub-rebuilds of the same Qt build and still refuses any
   other.
+- `magnetar-desktop` lists Pencil and Pocket among its optional dependencies,
+  with the other seven suite apps.
