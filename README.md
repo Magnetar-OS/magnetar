@@ -53,12 +53,14 @@ the alternative is an ISO that is quietly wrong.
 tools/gen-app-pkgbuilds-local.sh           # the suite from local working trees
 tools/build-local-packages.sh               # idempotent; --force to rebuild
 
-# Confirm every name in the ISO list resolves, before mkarchiso spends an hour
+# ISO
+./iso/sync.sh                               # picks up build/repo automatically
+
+# Confirm every name in the ISO list resolves, with its dependencies, against
+# the pacman.conf sync.sh just generated — before mkarchiso spends an hour
 # discovering otherwise.
 tools/check-iso-packages.sh
 
-# ISO
-./iso/sync.sh                               # picks up build/repo automatically
 cd build/iso-src && sudo ./buildiso.sh -p magnetar -v -w
 # -> build/iso-src/out/magnetar/
 

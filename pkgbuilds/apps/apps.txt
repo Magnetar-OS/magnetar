@@ -29,3 +29,5 @@ envelope|Mail for the COSMIC desktop||gnupg: OpenPGP keyring access
 jump|Spotlight-class launcher for the COSMIC desktop|pop-launcher|
 peek|QuickLook-class file previewer for the COSMIC desktop|||magnetar-peek
 grabit|Selection actions for Wayland: copy, search, translate, transform, run||
+pencil|A rich text editor for the COSMIC desktop||
+pocket|Passes, tickets and cards for the COSMIC desktop||

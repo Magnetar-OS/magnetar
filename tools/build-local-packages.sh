@@ -66,10 +66,14 @@ _build() {
   fi
 }
 
-echo "==> configuration packages"
-for p in magnetar-repos magnetar-settings magnetar-desktop magnetar-calamares; do
+# Every distribution package the ISO list names, as CI's Packages workflow
+# builds them: sync.sh points [magnetar] at this repository alone, so a name
+# missing here stops pacstrap however long it takes to get there.
+echo "==> distribution packages"
+for p in magnetar-keyring magnetar-repos magnetar-settings magnetar-branding magnetar-desktop magnetar-calamares; do
   _build "$root/pkgbuilds/$p" "$p" nodeps
 done
+_build "$root/pkgbuilds/cutecosmic" cutecosmic sync
 
 echo "==> applications (local working trees)"
 if [[ -d $root/build/pkgbuilds-local ]]; then
