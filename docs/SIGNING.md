@@ -46,43 +46,50 @@ For the bootstrap case — a machine that has neither — the armoured key is at
 `https://repo.magnetaros.com/magnetar.asc`. Check the fingerprint above before
 running `pacman-key --lsign-key`.
 
-## Signing a build
+## Publishing: CI signs
+
+What reaches users is signed by the Packages workflow
+(`.github/workflows/packages.yml`) on every push to `main`, and by each app's
+linux-release-kit pipeline when it tags a release. Both use the same key and
+write the same repository, `Magnetar-OS/arch-repo`:
+
+- each new package gets a detached `.sig` (`gpg --detach-sign`);
+- `repo-add` appends it to the existing `magnetar.db.tar.gz`, and the four
+  database files (`magnetar.db`, `.db.tar.gz`, `magnetar.files`,
+  `.files.tar.gz`) are re-signed;
+- a real `pacman -Syw`, trusting only the published key, fetches every new
+  package from the staged tree before anything is pushed.
+
+The workflows read four repository secrets, set on `Magnetar-OS/magnetar` and
+on every app repository:
+
+| Secret | Contents |
+| --- | --- |
+| `LINUX_GPG_PRIVATE_KEY` | `~/.config/magnetar/key-backup/magnetar-secret.asc`, armoured or base64 |
+| `LINUX_GPG_PASSPHRASE` | its passphrase |
+| `LINUX_GPG_KEY_ID` | the fingerprint above |
+| `ARCH_REPO_TOKEN` | a token with contents:write on `Magnetar-OS/arch-repo` |
+
+The exported key is passphrase-encrypted, so neither of the first two is
+useful alone. Splitting them is the only benefit a passphrase gives a key that
+a machine has to use unattended — take it.
+
+## Signing a local build
+
+`tools/sign-packages.sh` signs `build/repo`, the local repository an ISO test
+build installs from. It is not the publishing path: it rebuilds a
+`magnetar.db.tar.zst` from scratch, where the published repository is
+`magnetar.db.tar.gz` that CI appends to.
 
 ```sh
 tools/sign-packages.sh          # signs anything unsigned, then repo-add -s -v
 tools/sign-packages.sh --force  # re-sign everything
 ```
 
-`repo-add -v` verifies each package's signature while indexing, so a bad
-signature fails at publish time rather than on someone's machine.
-
-The passphrase comes from `MAGNETAR_SIGNING_PASSPHRASE`, set locally by
+`repo-add -v` verifies each package's signature while indexing. The
+passphrase comes from `MAGNETAR_SIGNING_PASSPHRASE`, set locally by
 `~/.config/magnetar/secrets.env` (mode 0600, deliberately outside any
 git-tracked dotfiles directory).
-
-## CI
-
-Two repository secrets, and they must be two:
-
-| Secret | Contents |
-| --- | --- |
-| `MAGNETAR_SIGNING_KEY` | `~/.config/magnetar/key-backup/magnetar-secret.asc` |
-| `MAGNETAR_SIGNING_PASSPHRASE` | the passphrase |
-
-The exported key is passphrase-encrypted, so neither secret is useful alone.
-Splitting them is the only benefit a passphrase gives a key that a machine has
-to use unattended — take it.
-
-```yaml
-- name: Import the signing key
-  run: |
-    printf '%s' "${{ secrets.MAGNETAR_SIGNING_KEY }}" | gpg --batch --import
-    printf '%s' "${{ secrets.MAGNETAR_SIGNING_PASSPHRASE }}" > /tmp/pp
-- name: Sign
-  env:
-    MAGNETAR_SIGNING_PASSPHRASE: ${{ secrets.MAGNETAR_SIGNING_PASSPHRASE }}
-  run: tools/sign-packages.sh
-```
 
 ## Backups
 

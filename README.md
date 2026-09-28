@@ -38,8 +38,9 @@ CachyOS's, the app PKGBUILDs from a manifest, the COSMIC `system_actions` map
 from the installed defaults, and the repository override list from a live audit
 run rather than from documentation. Hand-maintained copies of upstream files
 fall behind silently, and the symptom arrives months later as an ISO that does
-not boot on somebody's laptop. Every generator has a CI job that fails when its
-output is stale.
+not boot on somebody's laptop. The ISO package list has a nightly CI job that
+fails when its output is stale; the others are re-run by hand (see
+Regenerating).
 
 **The ISO is an overlay, not a fork.** `iso/sync.sh` fetches CachyOS-Live-ISO at
 the commit pinned in `branding.env` and applies exact-match patches. When CachyOS changes text
@@ -75,7 +76,8 @@ Requires `archiso mkinitcpio-archiso squashfs-tools grub git python`.
 
 ## Regenerating
 
-Run these after the upstream they derive from moves. CI fails if you forget.
+Run these after the upstream they derive from moves. CI fails if you forget the
+first; the second is on you.
 
 ```sh
 tools/gen-iso-packages.py build/iso-src/archiso/packages_desktop.x86_64  # after bumping UPSTREAM_ISO_REF
@@ -96,15 +98,18 @@ an unchanged version is never republished.
 
 Verified by running, on a CachyOS host:
 
-- The overlay applies to CachyOS-Live-ISO cleanly and is idempotent. Eight
-  exact-match patches, each of which fails by name if upstream moves.
+- The overlay applies to CachyOS-Live-ISO cleanly and is idempotent
+  (`tests/iso-sync.sh`). Every patch is exact-match and fails by name if
+  upstream moves.
 - `magnetar-repos`, `magnetar-settings`, `magnetar-desktop` and
   `magnetar-calamares` build and contain what they should.
 - `tools/repo-audit.sh` runs against a live 80-repository system and reports
   true findings; the CachyOS override list was generated from that run.
-- Every COSMIC config format was read off a running COSMIC 1.7.0. The
-  `system_actions` redirect and the `Spawn` action variant were confirmed
-  against cosmic-comp's strings and cosmic-settings-daemon's `action.rs`.
+- Every COSMIC config format was read off a running COSMIC 1.7.0 and
+  rechecked against 1.9.0 (2026-09-28): `system_actions` still matches the
+  installed defaults. The redirect and the `Spawn` action variant were
+  confirmed against cosmic-comp's strings and cosmic-settings-daemon's
+  `action.rs`.
 
 Three things this turned up that were not obvious:
 
@@ -121,9 +126,12 @@ Three things this turned up that were not obvious:
 
 Not done yet, in the order it blocks things:
 
-1. **Calamares is branded but untested.** The config assembly asserts on
-   CachyOS's text; whether it renders correctly under cosmic-comp is unknown
-   until an ISO boots.
+1. **No install has been run end to end in a VM.** The Calamares config
+   assembly is tested against the real `cachyos-calamares-next` package
+   (`tests/installer-config.sh`), and every package the installer selects
+   resolves against the target's pacman.conf; whether Calamares renders
+   correctly under cosmic-comp and completes an install is unknown until an
+   ISO is built and booted (`tools/test-vm.sh --install`, which needs root).
 
 ## Licence
 

@@ -5,8 +5,8 @@
 #
 # Why an overlay instead of a fork: CachyOS actively maintains that repo, and a
 # hard fork means silently falling behind its hardware and firmware work. The
-# overlay is small enough to review — a package list, three branding files, and
-# four assertions against upstream text. When upstream changes any of the text
+# overlay is small enough to review — a package list, a few branding files, and
+# a dozen exact-text patches. When upstream changes any of the text
 # we patch, this fails and says which one, instead of producing an ISO that is
 # subtly wrong.
 set -euo pipefail
@@ -259,8 +259,7 @@ if failed:
 PY
 
 # --- local package repository -----------------------------------------------
-# The published [magnetar] repository does not exist yet, and even once it does,
-# testing an ISO means testing packages that have not been published. When
+# Testing an ISO means testing packages that have not been published. When
 # build/repo holds packages, point the ISO's [magnetar] at them over file://.
 localrepo="${MAGNETAR_LOCAL_REPO:-$root/build/repo/x86_64}"
 if compgen -G "$localrepo/*.pkg.tar.zst" > /dev/null; then
@@ -287,8 +286,7 @@ if compgen -G "$localrepo/*.pkg.tar.zst" > /dev/null; then
   echo "    [$DISTRO_ID] -> file://$localrepo (unsigned, test build only)"
 else
   echo "==> no local packages in $localrepo"
-  echo "    [$DISTRO_ID] still points at $DISTRO_REPO_URL, which is not published."
-  echo "    Build packages first, or the ISO build cannot resolve magnetar-*."
+  echo "    [$DISTRO_ID] points at the published $DISTRO_REPO_URL."
 fi
 
 echo

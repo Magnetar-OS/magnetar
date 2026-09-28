@@ -186,22 +186,26 @@ Every third-party repository is `SigLevel = Required DatabaseOptional` and ships
 its own keyring package. **No repository in Magnetar uses `TrustAll`.**
 
 `SigLevel = Optional TrustAll` — which appears in a lot of copy-pasted
-instructions, including the current `arch-repo` README's quick-start — means
-unsigned packages from that host execute install scripts as root, unverified.
+instructions — means unsigned packages from that host execute install scripts as root, unverified.
 That is acceptable for a personal repo you are testing; it is not acceptable in
 a distribution's default `pacman.conf`, where the user did not choose the host.
 
-Keyrings are installed as dependencies of `magnetar-repos`, so the trust path
-exists before the repository is ever reachable.
+Magnetar's own keyring is a dependency of `magnetar-repos`, so the trust path
+to `[magnetar]` exists before the repository is ever reachable. The
+third-party keyrings cannot be: each lives inside the repository it verifies.
+Those repositories ship disabled, and `magnetar-repo enable` imports the key
+first (see "Disabled by default").
 
 ### `HoldPkg` (removal guard)
 ```ini
-HoldPkg = pacman glibc systemd base linux-cachyos magnetar-repos magnetar-keyring
+HoldPkg = pacman glibc systemd base linux-cachyos magnetar-repos
 ```
 Not a version pin — pacman has no version pinning. It forces a confirmation
 prompt before removing anything that would leave the machine unbootable or
 unable to install packages, `magnetar-repos` included: dropping it silently
 removes the repository configuration that everything else depends on.
+`magnetar-keyring` needs no entry: `magnetar-repos` depends on it, so pacman
+already refuses to remove it on its own.
 
 ### `IgnorePkg` (targeted, temporary)
 Empty by default and it should stay that way. An `IgnorePkg` entry is a
@@ -231,12 +235,15 @@ it.
 disabled; see "Disabled by default" above.
 
 ```
-/etc/pacman.conf                        the ordered file, sections 1-5
-/etc/pacman.d/magnetar-repos.d/60-endeavouros.conf
-/etc/pacman.d/magnetar-repos.d/70-chaotic-aur.conf
-/etc/pacman.d/magnetar-repos.d/80-valve.conf      (locked, Usage = Sync Search)
-/etc/pacman.d/magnetar-repos.d/99-local.conf      (yours, never packaged)
-/usr/share/magnetar/pacman.conf                   the canonical reference copy
+/etc/pacman.conf                                   the ordered file, sections 1-5
+/etc/pacman.d/magnetar-repos.d/60-chaotic-aur.conf
+/etc/pacman.d/magnetar-repos.d/61-endeavouros.conf
+/etc/pacman.d/magnetar-repos.d/62-garuda.conf … 64-quarry.conf
+/etc/pacman.d/magnetar-repos.d/70-nemesis_repo.conf … 74-Reborn-OS.conf
+/etc/pacman.d/magnetar-repos.d/80-valve.conf       (locked, Usage = Sync Search)
+/etc/pacman.d/magnetar-repos.d/99-local.conf       (yours, never overwritten)
+/usr/share/magnetar/pacman.conf                    the canonical file
+/usr/bin/magnetar-pacman-conf                      renders it for this CPU
 ```
 
 `pacman.conf` ends with `Include = /etc/pacman.d/magnetar-repos.d/*.conf`. The
@@ -277,6 +284,6 @@ change rather than reasoning about it:
 tools/repo-audit.sh | awk '$1=="FAIL" && $4=="cachyos" {print "cachyos:"$2}'
 ```
 
-It runs in CI on every change to the repo configuration and before every ISO
-build, so shadowing is caught at build time rather than on someone's machine
-three weeks later.
+It runs in CI (the Repo policy workflow) on every change to the repository
+configuration, the tools or the ISO overlay, so shadowing is caught before it
+ships rather than on someone's machine three weeks later.

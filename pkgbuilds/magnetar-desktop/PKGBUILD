@@ -6,8 +6,8 @@
 #
 # depends vs optdepends here is a real distinction, not a formality:
 #   depends    — remove it and this is no longer Magnetar.
-#   optdepends — the suite. Genuinely optional, and each one is a WIP app that
-#                should not be able to block the desktop from installing.
+#   optdepends — the suite. Genuinely optional: no single application should
+#                be able to block the desktop from installing.
 pkgname=magnetar-desktop
 pkgver=0.1.0
 pkgrel=5
@@ -18,7 +18,7 @@ license=('GPL-3.0-or-later')
 
 depends=(
   # Repository configuration first — everything below is reachable because of
-  # it, and it carries the keyrings.
+  # it, and it pulls in magnetar-keyring, which [magnetar] is verified with.
   'magnetar-repos'
   'magnetar-settings'
   # Not optional: cachyos-hooks rewrites os-release, lsb-release and issue to
@@ -80,8 +80,8 @@ depends=(
 )
 
 optdepends=(
-  # The suite. Every one is pre-1.0 and unreleased; none of them should be
-  # able to block a desktop install.
+  # The suite, released from each app's own repository into [magnetar]. None
+  # of them should be able to block a desktop install.
   'jump: Spotlight-class launcher (bound to Super+space by magnetar-settings)'
   'magnetar-peek: QuickLook-class file previewer'
   'grabit: selection actions over any Wayland surface'

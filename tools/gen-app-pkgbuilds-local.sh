@@ -2,16 +2,15 @@
 #
 # Generate PKGBUILDs that build the suite from LOCAL WORKING TREES.
 #
-# Development and ISO-testing only. The committed PKGBUILDs in pkgbuilds/apps
-# build from GitHub and are what ships; these exist because right now the suite
-# cannot be built any other way:
+# Development and ISO-testing only. What ships is each app's release: its
+# linux-release-kit pipeline builds a tagged version and publishes it to
+# [magnetar]. These exist so an ISO can be built and booted with code that is
+# not released yet — the working trees, uncommitted changes included.
 #
-#   - peek and grabit have no commits at all, so a git clone yields an empty
-#     repository.
-#   - circle, slate and envelope depend on siblings by path
-#     (`cosmic-pim-core = { path = "../cosmic-pim/crates/cosmic-pim-core" }`),
-#     so cloning one repository alone can never resolve its dependencies.
-#     Their own Cargo.toml says "Paths until cosmic-pim is pushed".
+# An app that points a dependency at a sibling working tree (an uncommented
+# `[patch]` with `path = "../cosmic-pim/..."`, say, while developing both) can
+# only build with that sibling beside it, so the siblings an app references by
+# path are staged too.
 #
 # So these stage the app plus every sibling it references into $srcdir and
 # build there. Output goes to build/pkgbuilds-local/ and is gitignored: it
@@ -136,7 +135,7 @@ done < "$manifest"
 # locket is not in apps.txt on purpose: it has a hand-written PKGBUILD at
 # locket/packaging/arch/PKGBUILD whose dependency list was derived from what its
 # binaries actually link against, which beats anything generated. That PKGBUILD
-# sources from GitHub, where locket is not published, so it cannot be used
+# builds from the GitHub repository, not the working tree, so it cannot be used
 # as-is for a local build.
 #
 # So: reuse its depends line, and emit the same local template as the rest.
