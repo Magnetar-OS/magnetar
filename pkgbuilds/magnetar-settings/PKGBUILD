@@ -13,7 +13,7 @@
 # package upgrade is not a thing this should do.
 pkgname=magnetar-settings
 pkgver=0.1.0
-pkgrel=2
+pkgrel=3
 pkgdesc="COSMIC session defaults for Magnetar"
 arch=('any')
 url="https://github.com/Magnetar-OS/magnetar"
@@ -30,7 +30,7 @@ depends+=('jump' 'ghostty')
 # Qt theming is declared here because this package is what selects it.
 optdepends+=('cutecosmic: the Qt platform theme QT_QPA_PLATFORMTHEME points at')
 
-optdepends=(
+optdepends+=(
   'envelope: Super+Shift+M'
   'circle: Super+Shift+C'
   'slate: Super+Shift+S'
