@@ -19,6 +19,11 @@ configuration. The applications keep their own changelogs.
 
 ### Changed
 
+- `[magnetar]` no longer keeps a renamed package's old name. When a package
+  there is replaced by another one (`replaces=`), publishing removes the old
+  name from the database and the repository, in both architectures. The old
+  name otherwise stayed installable for good, and kept colliding with the
+  other repository that made the rename necessary.
 - The artwork the distribution ships — the wallpapers and ASCII logo in
   `magnetar-settings`, the logo in `magnetar-branding`, the installer's images
   in `magnetar-calamares`, the ISO's boot splashes — is licensed CC-BY-SA-4.0,

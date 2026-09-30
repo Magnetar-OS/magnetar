@@ -57,8 +57,17 @@ write the same repository, `Magnetar-OS/arch-repo`:
 - `repo-add` appends it to the existing `magnetar.db.tar.gz`, and the four
   database files (`magnetar.db`, `.db.tar.gz`, `magnetar.files`,
   `.files.tar.gz`) are re-signed;
-- a real `pacman -Syw`, trusting only the published key, fetches every new
-  package from the staged tree before anything is pushed.
+- a real `pacman -Sy` and `-Sw`, trusting only the published key and requiring
+  a signed database, syncs the staged tree and fetches every new package from
+  it before anything is pushed.
+
+The Packages workflow's half of this is `tools/publish-packages.sh`, which
+`tests/publish-packages.sh` runs whole against a throwaway repository and key.
+It also finishes renames: when a package in the repository is replaced by
+another one there (`replaces=`, as `magnetar-peek` replaced `peek`), the old
+name is removed from both architectures' databases and directories and the
+databases are re-signed. The app pipelines publish the new name and never
+touch the old one.
 
 The workflows read four repository secrets, set on `Magnetar-OS/magnetar` and
 on every app repository:

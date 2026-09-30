@@ -111,7 +111,9 @@ tags a release. The packages under `pkgbuilds/` publish from
 `.github/workflows/packages.yml` on every push to `main`: any version not
 already in the repository is signed, added, and checked with a real
 `pacman -Syw` before the push. **To ship a change to one, bump its `pkgrel`** —
-an unchanged version is never republished.
+an unchanged version is never republished. The same step removes a package
+that another one in the repository replaces, which is how an app's rename is
+finished (`tools/publish-packages.sh`, `tools/repo-superseded.sh`).
 
 The ISO is built in CI after that, not beside it: `.github/workflows/iso.yml`
 runs when a Packages run on `main` has succeeded (or by hand), and first waits
