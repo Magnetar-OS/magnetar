@@ -13,11 +13,13 @@
 # package upgrade is not a thing this should do.
 pkgname=magnetar-settings
 pkgver=0.1.0
-pkgrel=3
+pkgrel=4
 pkgdesc="COSMIC session defaults for Magnetar"
 arch=('any')
 url="https://github.com/Magnetar-OS/magnetar"
-license=('GPL-3.0-or-later')
+# The configuration and scripts are GPL; the wallpapers and the ASCII logo are
+# artwork, CC-BY-SA-4.0 (their upstream copy is magnetar-brand).
+license=('GPL-3.0-or-later' 'CC-BY-SA-4.0')
 
 depends=('cosmic-session' 'cosmic-settings-daemon')
 optdepends=('fastfetch: system summary, with the Magnetar logo')

@@ -25,7 +25,9 @@ pkgrel=3
 pkgdesc="Magnetar system identity: os-release, lsb-release, issue and the logo"
 arch=('any')
 url="https://github.com/Magnetar-OS/magnetar"
-license=('GPL-3.0-or-later')
+# The scripts and hooks are GPL; the logo is artwork, CC-BY-SA-4.0 like the
+# rest of Magnetar's art (its upstream copy is magnetar-brand).
+license=('GPL-3.0-or-later' 'CC-BY-SA-4.0')
 depends=('pacman')
 install="$pkgname.install"
 

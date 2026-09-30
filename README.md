@@ -162,5 +162,14 @@ Not done yet, in the order it blocks things:
 
 GPL-3.0-or-later, following CachyOS-Live-ISO, which `iso/` derives from.
 
+The artwork is the exception: the wallpapers, ASCII logo, logo, installer
+images and boot splashes under `pkgbuilds/magnetar-settings/`,
+`pkgbuilds/magnetar-branding/`, `pkgbuilds/magnetar-calamares/branding/` and
+`iso/overlay/archiso/{grub,syslinux}/` are licensed
+[CC-BY-SA-4.0](https://creativecommons.org/licenses/by-sa/4.0/). Attribution:
+"Magnetar artwork © the Magnetar project, https://magnetaros.com". The licence
+covers copyright in the artwork; it grants no rights in the name or in the
+logo as a mark.
+
 COSMIC is a System76 trademark. Nothing here is named `cosmic-*`, and the
 distribution does not claim to be a COSMIC product.

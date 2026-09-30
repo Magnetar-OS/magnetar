@@ -19,6 +19,10 @@ configuration. The applications keep their own changelogs.
 
 ### Changed
 
+- The artwork the distribution ships — the wallpapers and ASCII logo in
+  `magnetar-settings`, the logo in `magnetar-branding`, the installer's images
+  in `magnetar-calamares`, the ISO's boot splashes — is licensed CC-BY-SA-4.0,
+  and those packages declare it beside GPL-3.0-or-later.
 - The canonical `/usr/share/magnetar/pacman.conf` no longer enables the
   CachyOS znver4 repositories for every machine: all three optimised sets
   (znver4, v4, v3) ship commented out, and the new `magnetar-pacman-conf`

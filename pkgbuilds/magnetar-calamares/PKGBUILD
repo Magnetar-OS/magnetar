@@ -14,7 +14,9 @@ pkgrel=7
 pkgdesc="Magnetar installer branding and package selection for Calamares"
 arch=('any')
 url="https://magnetaros.com"
-license=('GPL-3.0-or-later')
+# The configuration and scripts are GPL; the installer's logo, icon and welcome
+# image are artwork, CC-BY-SA-4.0 (their upstream copy is magnetar-brand).
+license=('GPL-3.0-or-later' 'CC-BY-SA-4.0')
 
 # magnetar-repos: the installer writes the target's pacman.conf with its
 # magnetar-pacman-conf. magnetar-keyring: the live keyring must trust
