@@ -113,6 +113,12 @@ already in the repository is signed, added, and checked with a real
 `pacman -Syw` before the push. **To ship a change to one, bump its `pkgrel`** —
 an unchanged version is never republished.
 
+The ISO is built in CI after that, not beside it: `.github/workflows/iso.yml`
+runs when a Packages run on `main` has succeeded (or by hand), and first waits
+until `[magnetar]` serves every package at the version this commit declares
+(`tools/check-published.sh`). An ISO therefore carries the packages of the
+commit it was built from, not the ones that commit was about to replace.
+
 ## State
 
 Verified by running, on a CachyOS host:

@@ -28,6 +28,12 @@ configuration. The applications keep their own changelogs.
   have been updated after it. The installed file is the canonical one,
   rendered for the machine's CPU by `magnetar-pacman-conf`.
 
+- A CI-built ISO carries the distribution packages of the commit it was built
+  from. The ISO workflow used to start on the same push as the workflow that
+  publishes those packages and could finish first, shipping the previous
+  installer; it now runs after a successful publish and waits until
+  `[magnetar]` serves the new versions.
+
 - `magnetar-settings` lists `fastfetch` and `cutecosmic` as optional
   dependencies again; a later `optdepends=` reassignment had dropped them.
 - `magnetar-repo enable arch4edu` works on a machine that does not have

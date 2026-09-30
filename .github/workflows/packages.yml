@@ -5,12 +5,17 @@ name: Packages
 # Qt theme. The applications are not built here — each one releases from its
 # own repository through linux-release-kit, which publishes to [magnetar].
 
+# iso/, branding.env and the ISO workflow are watched too, although nothing
+# here builds from them: the ISO workflow runs only after this one succeeds,
+# so that it never installs packages this run was about to replace.
+# tools/suite/ is the app-release scripts, which no package or ISO carries.
 on:
   push:
     branches: [main]
-    paths: ['pkgbuilds/**', 'tools/**', '.github/workflows/packages.yml']
+    paths: ['pkgbuilds/**', 'tools/**', '!tools/suite/**', 'iso/**', 'branding.env',
+            '.github/workflows/packages.yml', '.github/workflows/iso.yml']
   pull_request:
-    paths: ['pkgbuilds/**', 'tools/**']
+    paths: ['pkgbuilds/**', 'tools/**', '!tools/suite/**']
   schedule:
     # Nightly for the drift check: CachyOS edits packages_desktop.x86_64
     # without telling anyone, and the ISO list is derived from it. Rebuilding

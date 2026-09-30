@@ -1,9 +1,18 @@
 name: ISO
 
+# The ISO installs the distribution packages from the published [magnetar], so
+# it is built after they are published, never beside them: a push to main runs
+# Packages (which also watches iso/ and branding.env for this reason), and a
+# successful Packages run starts this. Triggered by the push directly, an ISO
+# raced the publish and shipped the previous installer.
+#
+# Not after the nightly Packages run: that one exists to catch drift and
+# normally publishes nothing. Dispatch this by hand for an ISO off-schedule.
 on:
-  push:
+  workflow_run:
+    workflows: [Packages]
+    types: [completed]
     branches: [main]
-    paths: ['iso/**', 'branding.env', '.github/workflows/iso.yml']
   pull_request:
     paths: ['iso/**', 'branding.env']
   workflow_dispatch:
@@ -11,6 +20,10 @@ on:
 jobs:
   build:
     name: Build live ISO
+    if: >-
+      github.event_name != 'workflow_run'
+      || (github.event.workflow_run.conclusion == 'success'
+          && contains(fromJSON('["push", "workflow_dispatch"]'), github.event.workflow_run.event))
     runs-on: ubuntu-latest
     container:
       image: 'archlinux:base-devel'
@@ -24,7 +37,19 @@ jobs:
           sed -i '/^\[core\]$/i[cachyos]\nServer = https://mirror.cachyos.org/repo/$arch/$repo\n' /etc/pacman.conf
           pacman -Syu --noconfirm archiso cachyos-keyring mkinitcpio-archiso squashfs-tools grub git python
 
+      # A workflow_run event checks out the default branch's tip; build the
+      # commit Packages published from instead.
       - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      # Packages succeeding means the push to arch-repo was accepted; GitHub
+      # Pages deploys it some minutes later. Until then the repository still
+      # serves the previous versions, and so would this ISO. A pull request's
+      # packages are never published, so there is nothing to wait for.
+      - name: "[magnetar] serves this commit's packages"
+        if: github.event_name != 'pull_request'
+        run: ./tools/check-published.sh --wait 900
 
       # mkarchiso verifies against the build host's keyring, and [magnetar] is
       # SigLevel = Required. Trust the key from the keyring package's source —
@@ -64,5 +89,5 @@ jobs:
             build/iso-src/out/*/SHA256SUMS
             build/iso-src/out/*/*.pkgs.txt
           if-no-files-found: error
-          # ISOs are large and this runs on every iso/ change.
+          # ISOs are large and this runs after every publish.
           retention-days: 7

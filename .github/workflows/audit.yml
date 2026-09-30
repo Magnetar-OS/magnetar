@@ -2,9 +2,9 @@ name: Repo policy
 
 on:
   push:
-    paths: ['pkgbuilds/**', 'tools/**', 'tests/**', 'iso/**', 'branding.env', '.github/workflows/audit.yml']
+    paths: ['pkgbuilds/**', 'tools/**', 'tests/**', 'iso/**', 'branding.env', '.github/workflows/**']
   pull_request:
-    paths: ['pkgbuilds/**', 'tools/**', 'tests/**', 'iso/**', 'branding.env', '.github/workflows/audit.yml']
+    paths: ['pkgbuilds/**', 'tools/**', 'tests/**', 'iso/**', 'branding.env', '.github/workflows/**']
   workflow_dispatch:
 
 jobs:
