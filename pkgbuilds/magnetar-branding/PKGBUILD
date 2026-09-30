@@ -16,9 +16,12 @@
 # replaces a same-named one in /usr/share/libalpm/hooks — so cachyos-hooks
 # stays installed and keeps providing update-initramfs and its plymouth and
 # reboot-required hooks, while the three branding hooks call us instead.
+#
+# The same script keeps limine's tools on their boot entries across the
+# rename: they look their group up by the OS name (see its limine section).
 pkgname=magnetar-branding
 pkgver=20260908
-pkgrel=2
+pkgrel=3
 pkgdesc="Magnetar system identity: os-release, lsb-release, issue and the logo"
 arch=('any')
 url="https://github.com/Magnetar-OS/magnetar"

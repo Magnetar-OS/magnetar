@@ -57,8 +57,103 @@ update_issue() {
     done
 }
 
+# --- limine ------------------------------------------------------------------
+# limine-entry-tool (kernel entries, run from the mkinitcpio hook) and
+# limine-snapper-sync (snapshot entries) keep their entries inside one
+# top-level group of limine.conf. Both find that group the same way: the one
+# carrying `comment: machine-id=<this machine>` inside it; else the one named
+# TARGET_OS_NAME; else, with that unset, the one named after os-release's
+# PRETTY_NAME.
+#
+# CachyOS's installer writes the group as `/+CachyOS`, with the machine-id
+# comment on the line above it — outside the group, where neither tool counts
+# it. So a CachyOS install is found by name alone, and renaming the OS orphans
+# the group the machine boots from: limine-entry-tool starts a second group
+# and stops maintaining the first, limine-snapper-sync finds nothing and stops
+# adding snapshots. Neither fails loudly.
+
+# The value of KEY as limine's tools read it: the last uncommented KEY= in
+# their configuration files, lowest priority first.
+limine_setting() {
+    local key=$1 f
+    for f in /usr/share/limine-entry-tool.d/*.conf /etc/limine-entry-tool.conf \
+             /etc/limine-entry-tool.d/*.conf /etc/limine-snapper-sync.conf /etc/default/limine; do
+        [[ -r $f ]] || continue
+        sed -nE "s/^[[:space:]]*${key}[[:space:]]*=[[:space:]]*\"?([^\"]*)\"?[[:space:]]*\$/\\1/p" "$f"
+    done | tail -n1
+}
+
+# limine.conf on the boot partition: under ESP_PATH when that is set, else in
+# the first of the places the tools search.
+limine_conf() {
+    local esp dir
+    esp=$(limine_setting ESP_PATH)
+    if [[ -n $esp ]]; then set -- "$esp"; else set -- /efi /boot /boot/efi /limine; fi
+    for dir; do
+        [[ -f $dir/limine.conf ]] && { printf '%s\n' "$dir/limine.conf"; return 0; }
+    done
+    return 1
+}
+
+# Whether renaming the OS to Magnetar has orphaned CachyOS's group in
+# limine.conf $1: no top-level group carries this machine's id, none is named
+# Magnetar, and there is a CachyOS one the tools can be pointed at (it carries
+# no other machine's id).
+limine_group_orphaned() {
+    local id
+    id=$(cat /etc/machine-id 2>/dev/null) || id=""
+    awk -v id="$id" '
+        { line = $0; gsub(/^[ \t]+|[ \t]+$/, "", line) }
+        line ~ /^\// {
+            if (line ~ /^\/[^\/]/) { top = substr(line, 2); sub(/^\+/, "", top); seen[top] = 1; own = 1 }
+            else own = 0    # from its first sub-entry on, lines belong to the sub-entries
+            next
+        }
+        own && line ~ /^comment:/ && match(tolower(line), /machine-id=[0-9a-f]+/) {
+            mid[top] = substr(tolower(line), RSTART + 11, RLENGTH - 11)
+        }
+        END {
+            for (t in mid) if (id != "" && mid[t] == id) exit 1
+            if (("Magnetar" in seen) && mid["Magnetar"] == "") exit 1
+            exit !(("CachyOS" in seen) && mid["CachyOS"] == "")
+        }' "$1"
+}
+
+# An existing CachyOS machine: keep the tools on the group it boots from by
+# naming it in /etc/default/limine, the one file both read. The bootloader
+# configuration of a machine that boots is not edited for the sake of a name.
+# An owner's own TARGET_OS_NAME, in any of the tools' files, is left alone.
+pin_limine_group() {
+    local conf
+    conf=$(limine_conf) || return 0
+    [[ -z $(limine_setting TARGET_OS_NAME) ]] || return 0
+    limine_group_orphaned "$conf" || return 0
+    [[ -w /etc/default/limine || ( ! -e /etc/default/limine && -w /etc/default ) ]] || return 0
+    cat >> /etc/default/limine <<'PIN'
+
+# Added by magnetar-branding. The boot entries are kept in the "/+CachyOS"
+# group of limine.conf, which limine's tools look up by the OS name unless
+# told otherwise, and the OS is called Magnetar now.
+TARGET_OS_NAME="CachyOS"
+PIN
+    echo " >>> limine: boot entries stay in the existing CachyOS group (TARGET_OS_NAME in /etc/default/limine)."
+}
+
+# The installer: CachyOS's bootloader module has just written an empty
+# `/+CachyOS` for a system that is called Magnetar. Name the group after the
+# system before the first limine-update fills it, so the boot menu says
+# Magnetar and the tools find the group by name with nothing pinned.
+name_limine_group() {
+    local conf
+    conf=$(limine_conf) || return 0
+    [[ -z $(limine_setting TARGET_OS_NAME) ]] || return 0
+    limine_group_orphaned "$conf" || return 0
+    sed -i -E 's|^([[:space:]]*/\+?)CachyOS[[:space:]]*$|\1Magnetar|' "$conf"
+}
+
 case "${1:-all}" in
-    os-release)  update_os_release ;;
-    lsb-release) update_lsb_release ;;
-    *)           update_os_release; update_lsb_release; update_issue ;;
+    os-release)      update_os_release ;;
+    lsb-release)     update_lsb_release ;;
+    name-boot-group) name_limine_group ;;
+    *)               update_os_release; update_lsb_release; update_issue; pin_limine_group ;;
 esac

@@ -6,7 +6,10 @@
 #    on an empty root), then, from inside the target, the full canonical file
 #    (audit F-02);
 #  - install what the steps Magnetar keeps from CachyOS act on: it enables
-#    bluetooth.service and configures ufw, so the list must carry both.
+#    bluetooth.service and configures ufw, so the list must carry both;
+#  - name limine's boot-entry group after the installed system before the
+#    first limine-update: CachyOS's bootloader module writes `/+CachyOS`, which
+#    limine's tools cannot find on a system called Magnetar.
 #
 # Runs against the real cachyos-calamares-next package: pass the directory it
 # is extracted in, or have [cachyos] configured on this host and the script
@@ -22,7 +25,8 @@ src=${1:-}
 if [[ -z $src ]]; then
   url=$(pacman -Sp cachyos-calamares-next | tail -n1)
   curl -fsSL -o "$w/cal.pkg.tar.zst" "$url"
-  mkdir "$w/cal"; bsdtar -xf "$w/cal.pkg.tar.zst" -C "$w/cal" etc/calamares usr/share/calamares/settings_online.conf
+  mkdir "$w/cal"; bsdtar -xf "$w/cal.pkg.tar.zst" -C "$w/cal" etc/calamares usr/share/calamares/settings_online.conf \
+    usr/lib/calamares/modules/bootloader/main.py
   src="$w/cal"
 fi
 
@@ -103,6 +107,19 @@ listed bluez || bad "the installer enables bluetooth.service but installs no blu
 grep -q 'pacman -Qs ufw' "$conf/scripts/enable-ufw" \
   || bad "CachyOS's enable-ufw no longer keys on the ufw package; re-read it"
 listed ufw || bad "the installer's firewall step has no ufw to enable"
+
+# limine. CachyOS's bootloader module ends limine.conf with these two lines:
+# the machine-id comment outside the group, and the group named CachyOS.
+# magnetar-branding's name-boot-group is written against exactly that.
+boot="$src/usr/lib/calamares/modules/bootloader/main.py"
+# shellcheck disable=SC2016 # the literal Python source
+{ grep -qF 'config_file.write(f"comment: machine-id={machine_id}\n")' "$boot" \
+    && grep -qF 'config_file.write(f"/+CachyOS\n")' "$boot"; } \
+  || bad "CachyOS's bootloader module no longer writes '/+CachyOS' the way magnetar-branding expects"
+order=$(grep -nE 'magnetar-branding name-boot-group|scripts/bootloader-post-setup"' "$conf/modules/shellprocess.conf" \
+        | grep -v -- '-rm ' | sed -E 's/^[0-9]+:.*(name-boot-group|bootloader-post-setup).*/\1/' | paste -sd' ')
+[[ $order == "name-boot-group bootloader-post-setup" ]] \
+  || bad "shellprocess.conf does not name the limine group before bootloader-post-setup's limine-update: '$order'"
 
 # Running it again must change nothing (magnetar-install re-assembles on every launch).
 cp -a "$conf" "$w/first"

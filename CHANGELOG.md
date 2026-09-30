@@ -28,6 +28,21 @@ configuration. The applications keep their own changelogs.
 
 ### Fixed
 
+- Installing `magnetar-branding` on a CachyOS machine that boots with limine no
+  longer cuts limine's tools off from their boot entries. `limine-entry-tool`
+  and `limine-snapper-sync` find their group in `limine.conf` by the OS name,
+  CachyOS's installer names it `CachyOS`, and the package renames the OS: new
+  kernels went into a second group and snapshot entries stopped, with no
+  error. The package now sets `TARGET_OS_NAME="CachyOS"` in
+  `/etc/default/limine` when that is the group the machine boots from and
+  nothing else is set; `limine.conf` itself is not touched. Machines that
+  already ran into this are repaired by the upgrade, unless limine's tools
+  have started a Magnetar group of their own, which is then left in use.
+- A fresh install with limine has one boot-entry group, named Magnetar.
+  CachyOS's installer writes the group as `CachyOS` whatever the system is
+  called, so an install ended up with an empty CachyOS group and a second one
+  limine's tools created; the installer now names the group before it is
+  filled.
 - The installer installs Magnetar. Calamares read CachyOS's package list
   (fetched from CachyOS's GitHub, falling back to CachyOS's own file) instead
   of Magnetar's, so an install got no COSMIC, no `magnetar-*` packages and no

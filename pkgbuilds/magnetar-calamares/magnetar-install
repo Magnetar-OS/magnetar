@@ -10,8 +10,8 @@
 #
 # So: take theirs, lay ours over it, patch the lines that have to change
 # (assemble-config.py: branding, no desktop chooser, Magnetar's package list,
-# a target pacman.conf that carries [magnetar]), and run Calamares against the
-# result. Every patch asserts on the text it expects and fails loudly if
+# a target pacman.conf that carries [magnetar], a limine boot-entry group named
+# after the installed system), and run Calamares against the result. Every patch asserts on the text it expects and fails loudly if
 # CachyOS has moved.
 set -euo pipefail
 

@@ -27,12 +27,19 @@ fails naming each one that CachyOS has moved, before anything is written.
    rewrite /etc/pacman.conf with the target's own magnetar-pacman-conf, now
    with the drop-in Include, so the installed system carries exactly the
    canonical file.
+6. shellprocess.conf, before its bootloader-post-setup command: name limine's
+   boot-entry group after the installed system. CachyOS's bootloader module
+   writes the group as `/+CachyOS` whatever the system is called; limine's
+   tools look it up by the OS name, find no Magnetar group, and start a second
+   one beside an empty CachyOS. magnetar-branding (in the target) renames the
+   freshly written group, and does nothing under any other bootloader.
 """
 import pathlib
 import re
 import sys
 
 PACMAN_CONF_TOOL = "/usr/bin/magnetar-pacman-conf"
+BRANDING_TOOL = "/usr/share/libalpm/scripts/magnetar-branding"
 
 
 def main(confdir: pathlib.Path) -> int:
@@ -109,6 +116,17 @@ def main(confdir: pathlib.Path) -> int:
             problems.append(f"{rel}: no 'script:' list to add to")
         else:
             s = head.sub(lambda m: f"script:\n{m.group(1)}{mine}\n{m.group(1)}-", s, count=1)
+
+        # Ignored on failure ("-"): limine-entry-tool then starts its own
+        # Magnetar group, which boots; aborting an install over a name does not.
+        mine = f'- "-{BRANDING_TOOL} name-boot-group"'
+        post = re.compile(r'^([ \t]*)- command: "/etc/calamares/scripts/bootloader-post-setup"\n', re.M)
+        if mine in s:
+            pass
+        elif len(post.findall(s)) != 1:
+            problems.append(f"{rel}: expected exactly one bootloader-post-setup command")
+        else:
+            s = post.sub(lambda m: f"{m.group(1)}{mine}\n{m.group(0)}", s, count=1)
         writes[confdir / rel] = s
 
     if problems:
@@ -123,6 +141,7 @@ def main(confdir: pathlib.Path) -> int:
     print("    settings.conf: branding -> magnetar, desktop chooser removed")
     print("    netinstall.conf: Magnetar's package list only")
     print("    pacman.conf on the target: written by magnetar-pacman-conf")
+    print("    limine boot-entry group: named after the installed system")
     return 0
 
 
