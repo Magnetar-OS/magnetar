@@ -70,7 +70,10 @@ discover_roots() {
     local manifest dir rel top
     # Symlinked directories are not followed, which keeps the libcosmic
     # reference checkout out of scope; it is upstream's tree, not ours to
-    # touch. target/ is pruned so cargo's own vendored copies stay invisible.
+    # touch. target/ is pruned so cargo's own vendored copies stay invisible,
+    # and .worktrees/ because a git worktree there is another session's
+    # checkout in progress: updating its lockfile or cleaning its target from
+    # here pulls files out from under a build that is running.
     while IFS= read -r manifest; do
         dir="$(dirname -- "$manifest")"
         rel="$(rel_to_root "$dir")"
@@ -91,7 +94,7 @@ discover_roots() {
             continue
         fi
         roots+=("$dir")
-    done < <(find "$ROOT" -name target -prune -o -name Cargo.toml -print | sort)
+    done < <(find "$ROOT" \( -name target -o -name .worktrees \) -prune -o -name Cargo.toml -print | sort)
 }
 
 # The tail every caller prints: what was passed over, and why.
