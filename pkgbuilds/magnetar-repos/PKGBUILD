@@ -12,7 +12,7 @@
 # place that writes /etc/pacman.conf, with magnetar-pacman-conf.
 pkgname=magnetar-repos
 pkgver=0.1.0
-pkgrel=6
+pkgrel=7
 pkgdesc="Pacman repository configuration for Magnetar: ordered, signed, locked"
 arch=('any')
 url="https://github.com/Magnetar-OS/magnetar"

@@ -12,6 +12,13 @@
 #
 # Regenerate after a CachyOS repo change with:
 #   tools/repo-audit.sh | awk '$1=="FAIL" && $4=="cachyos" {print "cachyos:"$2}'
+#
+# Run it for every CPU level, not only the machine at hand. The optimised sets
+# differ in what they carry, and a name [cachyos] takes from Arch shows up only
+# where no optimised set above it carries the name too: mesa is in the znver4
+# set but not in v3 or v4, and the compression libraries are in all three, so a
+# list generated on one Zen 4 machine passed there and failed everywhere else.
+# The Repo policy workflow audits all four renderings of the canonical file.
 
 # --- The optimised rebuilds ------------------------------------------------
 # These exist to replace core/extra with x86-64-v3/v4 builds. Shadowing every
@@ -66,6 +73,72 @@ cachyos:linux-firmware-ti
 cachyos:linux-firmware-whence
 cachyos:broadcom-wl-dkms
 cachyos:dkms
+
+# Graphics — CachyOS builds its own mesa (epoch 3), and ships it in [cachyos]
+# and the znver4 set only, so on a v3, v4 or baseline machine this is where
+# mesa comes from. Found 2026-09-30, when the audit ran on a v3 runner.
+cachyos:mesa
+cachyos:mesa-docs
+cachyos:opencl-mesa
+cachyos:vulkan-asahi
+cachyos:vulkan-broadcom
+cachyos:vulkan-dzn
+cachyos:vulkan-freedreno
+cachyos:vulkan-gfxstream
+cachyos:vulkan-intel
+cachyos:vulkan-mesa-implicit-layers
+cachyos:vulkan-mesa-layers
+cachyos:vulkan-nouveau
+cachyos:vulkan-panfrost
+cachyos:vulkan-powervr
+cachyos:vulkan-radeon
+cachyos:vulkan-swrast
+cachyos:vulkan-virtio
+cachyos:lib32-mesa
+cachyos:lib32-opencl-mesa
+cachyos:lib32-vulkan-asahi
+cachyos:lib32-vulkan-broadcom
+cachyos:lib32-vulkan-dzn
+cachyos:lib32-vulkan-freedreno
+cachyos:lib32-vulkan-gfxstream
+cachyos:lib32-vulkan-intel
+cachyos:lib32-vulkan-mesa-implicit-layers
+cachyos:lib32-vulkan-mesa-layers
+cachyos:lib32-vulkan-nouveau
+cachyos:lib32-vulkan-panfrost
+cachyos:lib32-vulkan-powervr
+cachyos:lib32-vulkan-radeon
+cachyos:lib32-vulkan-swrast
+cachyos:lib32-vulkan-virtio
+
+# --- Baseline CPUs only ------------------------------------------------------
+# On a machine with no optimised set (below x86-64-v3) these come from
+# [cachyos]; on every other machine the optimised set above it carries them and
+# its wildcard already covers them. The same CachyOS builds either way.
+# NVIDIA
+cachyos:nvidia-utils
+cachyos:nvidia-settings
+cachyos:nvidia-open-dkms
+cachyos:opencl-nvidia
+cachyos:libxnvctrl
+cachyos:lib32-nvidia-utils
+cachyos:lib32-opencl-nvidia
+# Compression and toolchain
+cachyos:xz
+cachyos:zstd
+cachyos:zlib-ng
+cachyos:zlib-ng-compat
+cachyos:lib32-zlib-ng
+cachyos:lib32-zlib-ng-compat
+cachyos:linux-api-headers
+# The rest
+cachyos:gamescope
+cachyos:geocode-glib
+cachyos:geocode-glib-docs
+cachyos:pacman-contrib
+cachyos:qrcodegen-cmake
+cachyos:qrcodegencpp-cmake
+cachyos:sddm
 
 # Power and hardware
 cachyos:power-profiles-daemon

@@ -64,7 +64,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.1
 
-      - name: Install the Magnetar pacman.conf
+      - name: Keys, mirrorlists and the drop-ins
         run: |
           pacman-key --init
           pacman-key --recv-keys F3B607488DB35A47 --keyserver keyserver.ubuntu.com
@@ -81,19 +81,31 @@ jobs:
           pacman-key --add pkgbuilds/magnetar-keyring/magnetar.asc
           pacman-key --lsign-key 382D984841F8C8A2BFB952675623FAF3DF36FFAF
 
-          # Rendered the way the installer writes it: the optimised set this
-          # runner's CPU supports, if any.
-          sed "s|^CANONICAL=.*|CANONICAL=$PWD/pkgbuilds/magnetar-repos/pacman.conf|" \
-            pkgbuilds/magnetar-repos/magnetar-pacman-conf > /tmp/magnetar-pacman-conf
-          bash /tmp/magnetar-pacman-conf /etc/pacman.conf
           mkdir -p /etc/pacman.d/magnetar-repos.d
           cp pkgbuilds/magnetar-repos/repos.d/*.conf /etc/pacman.d/magnetar-repos.d/
-          pacman -Sy
 
       # Fails on: a repository above Arch winning a name it does not declare an
       # override for, any repository resolving to TrustAll or Never, and ALHP
       # enabled alongside the CachyOS optimised repos.
-      - name: Audit
+      #
+      # Once per CPU level, each rendered the way the installer writes it. The
+      # optimised sets differ in what they carry, so what [cachyos] takes from
+      # Arch differs per level — audited only for the runner's own CPU, this
+      # job passed on a Zen 4 runner and failed on any other, on the same commit.
+      - name: Audit, for every CPU level
         env:
           MAGNETAR_REPO_OVERRIDES: tools/repo-overrides.txt
-        run: ./tools/repo-audit.sh
+        shell: bash
+        run: |
+          sed "s|^CANONICAL=.*|CANONICAL=$PWD/pkgbuilds/magnetar-repos/pacman.conf|" \
+            pkgbuilds/magnetar-repos/magnetar-pacman-conf > /tmp/magnetar-pacman-conf
+          failed=0
+          for level in none v3 v4 znver4; do
+            echo "::group::CPU level: $level"
+            MAGNETAR_CPU_LEVEL=$level bash /tmp/magnetar-pacman-conf /etc/pacman.conf
+            pacman -Sy
+            ./tools/repo-audit.sh || { failed=1; fail_levels="${fail_levels:-} $level"; }
+            echo "::endgroup::"
+          done
+          [ "$failed" -eq 0 ] || echo "::error::The repository audit fails on a machine at CPU level:${fail_levels}"
+          exit "$failed"

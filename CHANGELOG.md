@@ -52,6 +52,12 @@ configuration. The applications keep their own changelogs.
   called, so an install ended up with an empty CachyOS group and a second one
   limine's tools created; the installer now names the group before it is
   filled.
+- `magnetar-repo-audit` is clean on a correct machine at every CPU level. Its
+  list of what CachyOS deliberately takes over from Arch was recorded on one
+  Zen 4 machine, where the znver4 repositories carry everything; on an
+  x86-64-v3 or -v4 machine, where `mesa` comes from `[cachyos]` itself, it
+  reported 33 violations, and 54 on a baseline CPU. The list now covers all
+  four.
 - The installer installs Magnetar. Calamares read CachyOS's package list
   (fetched from CachyOS's GitHub, falling back to CachyOS's own file) instead
   of Magnetar's, so an install got no COSMIC, no `magnetar-*` packages and no

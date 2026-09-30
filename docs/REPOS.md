@@ -286,4 +286,7 @@ tools/repo-audit.sh | awk '$1=="FAIL" && $4=="cachyos" {print "cachyos:"$2}'
 
 It runs in CI (the Repo policy workflow) on every change to the repository
 configuration, the tools or the ISO overlay, so shadowing is caught before it
-ships rather than on someone's machine three weeks later.
+ships rather than on someone's machine three weeks later. CI audits the
+canonical file rendered for each CPU level — baseline, v3, v4 and znver4 —
+because what `[cachyos]` takes over from Arch depends on which optimised set
+sits above it: regenerate the list from all four, not from one machine.
