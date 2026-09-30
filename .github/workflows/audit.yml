@@ -35,6 +35,8 @@ jobs:
             pkgbuilds/magnetar-calamares/magnetar-install \
             pkgbuilds/magnetar-branding/magnetar-branding
           shellcheck -s bash pkgbuilds/*/*.install
+          # -x: they source lib/cargo-roots.sh, named relative to themselves.
+          shellcheck -x -P SCRIPTDIR tools/suite/*.sh tools/suite/lib/*.sh
 
       # makepkg refuses to run as root, and the tests call it.
       - name: Tests
