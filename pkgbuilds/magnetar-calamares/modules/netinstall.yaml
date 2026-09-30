@@ -68,6 +68,46 @@
      - greetd
      - ghostty
 
+# What CachyOS's "Base-devel + Common packages" group brings that a desktop
+# needs and nothing above depends on. Magnetar's list replaces CachyOS's
+# entirely, so without this an install had no Bluetooth stack, no firewall,
+# only the fonts COSMIC pulls in, and no sound on the many laptops whose codec
+# needs loadable firmware. CachyOS's installer steps already expect them: it
+# enables bluetooth.service, and turns ufw on (deny incoming, allow outgoing)
+# when ufw is installed.
+#
+# Package names are CachyOS's own, group for group. Not critical: a font that
+# leaves the repositories must not abort an install.
+- name: "Magnetar system (hidden)"
+  description: "Bluetooth, the firewall, fonts and audio firmware"
+  hidden: true
+  selected: true
+  critical: false
+  packages:
+     # bluetooth
+     - bluez
+     - bluez-hid2hci
+     - bluez-libs
+     - bluez-utils
+     - bluez-obex
+     # firewall
+     - ufw
+     - ufw-extras
+     # fonts
+     - awesome-terminal-fonts
+     - noto-fonts-emoji
+     - cantarell-fonts
+     - noto-fonts
+     - ttf-bitstream-vera
+     - ttf-dejavu
+     - ttf-liberation
+     - ttf-opensans
+     - ttf-meslo-nerd
+     - noto-fonts-cjk
+     # audio firmware
+     - alsa-firmware
+     - sof-firmware
+
 - name: "Magnetar applications"
   description: "The COSMIC applications built for Magnetar. jump replaces the stock launcher; the rest are yours to keep or remove."
   hidden: false

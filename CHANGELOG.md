@@ -6,6 +6,17 @@ configuration. The applications keep their own changelogs.
 
 ## [Unreleased]
 
+### Added
+
+- An installed system has Bluetooth, a firewall, a full font set and audio
+  firmware. Magnetar's installer list replaced CachyOS's entirely and left out
+  what CachyOS's common group brought, so an install had no `bluez`, no `ufw`,
+  only the fonts COSMIC depends on, and no `sof-firmware` or `alsa-firmware`
+  for laptops whose sound needs them. A hidden "Magnetar system" group now
+  installs CachyOS's Bluetooth, firewall and font selections and the audio
+  firmware. The installer's existing steps then enable `bluetooth.service` and
+  turn `ufw` on, denying incoming and allowing outgoing connections.
+
 ### Changed
 
 - The canonical `/usr/share/magnetar/pacman.conf` no longer enables the

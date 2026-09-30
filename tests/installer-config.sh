@@ -4,7 +4,9 @@
 #  - give the target a pacman.conf with this CPU's optimised set, then
 #    [magnetar], then [cachyos] — first without the drop-in Include (pacstrap
 #    on an empty root), then, from inside the target, the full canonical file
-#    (audit F-02).
+#    (audit F-02);
+#  - install what the steps Magnetar keeps from CachyOS act on: it enables
+#    bluetooth.service and configures ufw, so the list must carry both.
 #
 # Runs against the real cachyos-calamares-next package: pass the directory it
 # is extracted in, or have [cachyos] configured on this host and the script
@@ -91,6 +93,16 @@ commands shellprocess.conf | run_in target
 got=$(repos); [[ $got == "$want" ]] || bad "installed pacman.conf: $got"
 MAGNETAR_CPU_LEVEL=v3 bash "$w/mpc" | cmp -s - "$root/etc/pacman.conf" \
   || bad "installed pacman.conf is not the canonical file rendered for this CPU"
+
+# The steps kept from CachyOS need their packages. services-systemd enables
+# bluetooth.service, and enable-ufw turns the firewall on when ufw is there.
+listed() { grep -qE "^[[:space:]]+- $1[[:space:]]*\$" "$conf/modules/netinstall.yaml"; }
+grep -qE '^[[:space:]]*- name: "?bluetooth"?' "$conf/modules/services-systemd.conf" \
+  || bad "CachyOS no longer enables bluetooth.service; re-read services-systemd.conf"
+listed bluez || bad "the installer enables bluetooth.service but installs no bluez"
+grep -q 'pacman -Qs ufw' "$conf/scripts/enable-ufw" \
+  || bad "CachyOS's enable-ufw no longer keys on the ufw package; re-read it"
+listed ufw || bad "the installer's firewall step has no ufw to enable"
 
 # Running it again must change nothing (magnetar-install re-assembles on every launch).
 cp -a "$conf" "$w/first"
