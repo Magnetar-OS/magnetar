@@ -103,7 +103,7 @@ locket
 envelope
 circle
 slate
-pencil
+magnetar-pencil
 pocket
 """
 

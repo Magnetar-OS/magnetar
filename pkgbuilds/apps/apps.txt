@@ -5,7 +5,9 @@
 #
 # The last field is needed only where the released package is not named after
 # the repository: peek ships as magnetar-peek, because every distribution
-# already has an unrelated `peek` (a GIF recorder).
+# already has an unrelated `peek` (a GIF recorder), and pencil as
+# magnetar-pencil, because other repositories carry an unrelated `pencil`
+# (Evolus Pencil).
 #
 # Nothing here ships. Every app releases through linux-release-kit, which
 # publishes a versioned package to [magnetar]; the ISO and the installer name
@@ -29,5 +31,5 @@ envelope|Mail for the COSMIC desktop||gnupg: OpenPGP keyring access
 jump|Spotlight-class launcher for the COSMIC desktop|pop-launcher|
 peek|QuickLook-class file previewer for the COSMIC desktop|||magnetar-peek
 grabit|Selection actions for Wayland: copy, search, translate, transform, run||
-pencil|A rich text editor for the COSMIC desktop||
+pencil|A rich text editor for the COSMIC desktop|||magnetar-pencil
 pocket|Passes, tickets and cards for the COSMIC desktop||

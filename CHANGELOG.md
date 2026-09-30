@@ -19,6 +19,13 @@ configuration. The applications keep their own changelogs.
 
 ### Changed
 
+- The rich text editor is installed as `magnetar-pencil`. `pencil` is also the
+  name of an unrelated program (Evolus Pencil) in `[andontie-aur]`, one of
+  the repositories `magnetar-repo enable` offers, so which one a machine got
+  depended on its repository order and `magnetar-repo-audit` failed for as
+  long as that repository was enabled. The installer's application group,
+  the live ISO and `magnetar-desktop`'s optional dependencies name the new
+  package; it replaces `pencil` 1.2.0 and older on upgrade.
 - `[magnetar]` no longer keeps a renamed package's old name. When a package
   there is replaced by another one (`replaces=`), publishing removes the old
   name from the database and the repository, in both architectures. The old
