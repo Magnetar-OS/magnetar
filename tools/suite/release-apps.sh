@@ -32,7 +32,7 @@ set -euo pipefail
 HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 ROOT="$(cd -- "$HERE/../../.." && pwd)"
 RELEASE_KIT="${RELEASE_KIT:-$HOME/GitHub/release-kits/release-kit/release.mjs}"
-ALL_APPS=(grabit circle envelope jump peek slate locket pencil pocket)
+ALL_APPS=(grabit circle envelope jump peek slate locket pencil pocket magnetar-accounts)
 
 usage() {
     cat <<'USAGE'
@@ -43,7 +43,9 @@ commits the lockfile, and releases the app with release-kit. With no app
 named, every suite application is released.
 
 options:
-  -b, --bump KIND   release-kit target: patch, minor (default), major, auto
+  -b, --bump KIND   release-kit target: patch, minor (default), major, auto;
+                    an app with no release yet is released as the version
+                    it carries, whatever this says
   -n, --dry-run     update and check everything a real run checks, then show
                     release-kit's plan; the lockfiles are left uncommitted,
                     nothing is committed or pushed, and the exit status says
@@ -136,11 +138,23 @@ for app in "${apps[@]}"; do
     # From the last release, not HEAD or the working tree: a lockfile
     # somebody already updated — committed or not — has moved since that
     # release all the same, and its changelog should say so.
-    last="$(git -C "$dir" describe --tags --abbrev=0)"
-    before="$(git -C "$dir" show "$last:Cargo.lock" | libcosmic_rev)"
+    #
+    # An app's first release has no tag. Its [Unreleased] is the whole
+    # release, so there is no "rebuilt against" to name, and its version is
+    # released as it stands — release-kit with no target — rather than bumped
+    # past a version that was never released.
+    target=("$bump")
+    if last="$(git -C "$dir" describe --tags --abbrev=0 2>/dev/null)"; then
+        before="$(git -C "$dir" show "$last:Cargo.lock" | libcosmic_rev)"
+    else
+        before=""
+        target=()
+        echo "$app: first release, as the version it carries"
+    fi
     (cd "$dir" && cargo update --quiet)
     [ ! -f "$dir/fuzz/Cargo.lock" ] || (cd "$dir/fuzz" && cargo update --quiet)
     after="$(libcosmic_rev <"$dir/Cargo.lock")"
+    [ ${#target[@]} -gt 0 ] || before="$after"
     echo "libcosmic: ${before:-?} -> ${after:-?}"
 
     # The pipeline's own gates, so a release cannot fail on them after the
@@ -170,7 +184,7 @@ for app in "${apps[@]}"; do
         # release-kit's own preflight, reported rather than swallowed: a dry
         # run that says "checked" for an app the real run refuses is worse
         # than none.
-        if ! (cd "$dir" && node "$RELEASE_KIT" "$bump" --dry-run --skip commit); then
+        if ! (cd "$dir" && node "$RELEASE_KIT" "${target[@]}" --dry-run --skip commit); then
             echo "$app: release-kit's dry run failed; the real run would stop here" >&2
             dry_failed+=("$app")
         fi
@@ -190,7 +204,7 @@ for app in "${apps[@]}"; do
         git -C "$dir" commit --quiet -m "chore(deps): build against libcosmic $after" -- "${paths[@]}"
     fi
 
-    (cd "$dir" && node "$RELEASE_KIT" "$bump" --yes)
+    (cd "$dir" && node "$RELEASE_KIT" "${target[@]}" --yes)
 done
 
 released=()
