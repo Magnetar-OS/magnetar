@@ -25,6 +25,7 @@ brltty
 btrfs-progs
 cachy-chroot
 cachyos-calamares-next
+cachyos-drm-awaiter
 cachyos-fish-config
 cachyos-hooks
 cachyos-keyring

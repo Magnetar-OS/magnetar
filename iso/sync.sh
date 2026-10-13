@@ -234,6 +234,13 @@ remove("archiso/profiledef.sh",
        '  ["/usr/local/bin/calamares-online.sh"]="0:0:755"\n',
        "permissions entry for the removed calamares-online.sh")
 
+# Upstream's own leftover, the same noise: 3215497 replaced nvidia-module-loader
+# with the cachyos-drm-awaiter package and deleted the script, but kept its
+# entry here.
+remove("archiso/profiledef.sh",
+       '  ["/usr/local/bin/nvidia-module-loader"]="0:0:755"\n',
+       "permissions entry for upstream's removed nvidia-module-loader")
+
 # --- archiso/pacman.conf: the repo the ISO installs Magnetar packages from -----
 patch("archiso/pacman.conf",
       "[cachyos]\nServer = https://mirror.cachyos.org/repo/$arch/$repo",

@@ -21,6 +21,12 @@ diff -r --no-dereference --exclude=.git "$w/first" "$w/iso-src" > "$w/diff" || {
 [[ $UPSTREAM_ISO_REF =~ ^[0-9a-f]{40}$ ]] || { echo "FAIL: UPSTREAM_ISO_REF is not a commit: $UPSTREAM_ISO_REF"; fail=1; }
 [[ $(git -C "$w/iso-src" rev-parse HEAD) == "$UPSTREAM_ISO_REF" ]] || { echo "FAIL: the tree is not at the pinned commit"; fail=1; }
 
+# mkarchiso warns for every file_permissions entry whose file is missing; sync
+# removes entries for files it or upstream deleted, so none may be left.
+while read -r path; do
+  [[ -e $w/iso-src/archiso/airootfs$path ]] || { echo "FAIL: profiledef.sh sets permissions on missing $path"; fail=1; }
+done < <(sed -n 's/^  \["\(\/[^"]*\)"\]=.*/\1/p' "$w/iso-src/archiso/profiledef.sh")
+
 conf="$w/iso-src/archiso/pacman.conf"
 mapfile -t repos < <(sed -n 's/^\[\([^]]*\)\]$/\1/p' "$conf" | grep -vx options)
 order=" ${repos[*]} "

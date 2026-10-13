@@ -19,6 +19,10 @@ configuration. The applications keep their own changelogs.
 
 ### Changed
 
+- The live ISO follows CachyOS-Live-ISO to `3215497`, which replaces its
+  NVIDIA module loader script with the `cachyos-drm-awaiter` package: the live
+  session's greeter now waits for the GPU drivers to load, and loads NVIDIA's
+  after an integrated GPU's.
 - The rich text editor is installed as `magnetar-pencil`. `pencil` is also the
   name of an unrelated program (Evolus Pencil) in `[andontie-aur]`, one of
   the repositories `magnetar-repo enable` offers, so which one a machine got
