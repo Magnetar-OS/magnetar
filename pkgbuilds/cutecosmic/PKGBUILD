@@ -24,9 +24,9 @@
 #
 # The pin is a range, not "=": >= the Arch build, < its next pkgrel. CachyOS's
 # optimised repositories rebuild the same source with a sub-release —
-# [cachyos-extra-v3] and -v4 carry qt6-base 6.11.2-3.1 for Arch's 6.11.2-3 —
-# and an exact pin made magnetar-desktop uninstallable on those CPUs. Any new
-# pkgrel or pkgver is still refused.
+# [cachyos-extra-v3] and -v4 carry qt6-base 6.12.0-2.1 for Arch's 6.12.0-2 —
+# and an exact pin (=6.11.2-3, against their 6.11.2-3.1) made magnetar-desktop
+# uninstallable on those CPUs. Any new pkgrel or pkgver is still refused.
 #
 # Rebuilding is the maintenance cost of shipping this. On every qt6-base bump:
 #   1. rebuild this package against the new Qt
@@ -34,14 +34,14 @@
 #   3. publish both together
 pkgname=cutecosmic
 pkgver=0.2.0
-pkgrel=2
+pkgrel=3
 pkgdesc="Qt platform theme for the COSMIC desktop"
 arch=('x86_64')
 url="https://github.com/IgKh/cutecosmic"
 license=('GPL-3.0-or-later')
 
 depends=(
-  'qt6-base>=6.11.2-3' 'qt6-base<6.11.2-4'
+  'qt6-base>=6.12.0-2' 'qt6-base<6.12.0-3'
   'qt6-declarative'
 )
 makedepends=('cargo' 'cmake' 'git')

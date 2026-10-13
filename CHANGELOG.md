@@ -44,6 +44,11 @@ configuration. The applications keep their own changelogs.
 
 ### Fixed
 
+- `cutecosmic` 0.2.0-3 is built against Qt 6.12, so `pacman -Syu` can take
+  `qt6-base` 6.12.0. The previous build was pinned to Qt 6.11.2, and on every
+  machine with `magnetar-desktop` the upgrade stopped on that dependency. Upstream cutecosmic 0.2.0
+  builds unchanged against 6.12; the pin accepts Arch's 6.12.0-2 and CachyOS's
+  6.12.0-2.1 rebuilds of it.
 - Installing `magnetar-branding` on a CachyOS machine that boots with limine no
   longer cuts limine's tools off from their boot entries. `limine-entry-tool`
   and `limine-snapper-sync` find their group in `limine.conf` by the OS name,

@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # cutecosmic must stay pinned to the Qt build it was compiled against, yet
 # accept CachyOS's optimised rebuilds of that same build: [cachyos-extra-v3]
-# and [cachyos-extra-v4] carry qt6-base 6.11.2-3.1 for Arch's 6.11.2-3, and an
-# exact "=6.11.2-3" made magnetar-desktop uninstallable on those CPUs.
+# and [cachyos-extra-v4] carry a sub-release such as 6.12.0-2.1 for Arch's
+# 6.12.0-2, and an exact "=6.11.2-3" made magnetar-desktop uninstallable on
+# those CPUs when they carried 6.11.2-3.1.
 set -euo pipefail
 cd "$(dirname "$0")/../pkgbuilds/cutecosmic"
 mapfile -t cons < <(makepkg --printsrcinfo | sed -nE 's/^\s*depends = qt6-base([<>=]+.*)$/\1/p')
