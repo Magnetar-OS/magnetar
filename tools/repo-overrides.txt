@@ -160,3 +160,7 @@ cachyos:lib32-freeglut
 # If the audit ever reports one as installed, something pulled in Plasma.
 cachyos:plasma-login-manager
 cachyos:dms-shell
+# GNOME's compositor, joined by 2026-10-13 (51.0-2 over extra's 51.0-1). Only
+# other desktops' shells require it (gnome-shell, budgie, gala, phoc), and
+# Magnetar installs none of them.
+cachyos:mutter
