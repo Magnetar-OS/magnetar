@@ -68,6 +68,13 @@ greetd
 xdg-desktop-portal
 xdg-desktop-portal-gtk
 
+# --- Online accounts ---------------------------------------------------------
+# GNOME Online Accounts and its standalone window. Google and Microsoft sign in
+# there under GNOME's registration until Magnetar ships client ids of its own,
+# and Accounts (magnetar-accounts) links what it holds into the suite.
+gnome-online-accounts
+gnome-online-accounts-gtk
+
 # --- Magnetar ----------------------------------------------------------------
 magnetar-keyring
 magnetar-branding
@@ -105,6 +112,7 @@ circle
 slate
 magnetar-pencil
 pocket
+magnetar-accounts
 """
 
 

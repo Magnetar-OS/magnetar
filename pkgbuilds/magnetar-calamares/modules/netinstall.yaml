@@ -107,6 +107,10 @@
      # audio firmware
      - alsa-firmware
      - sof-firmware
+     # online accounts: Google and Microsoft sign-in for the suite, through
+     # GNOME Online Accounts, until Magnetar ships client ids of its own
+     - gnome-online-accounts
+     - gnome-online-accounts-gtk
 
 - name: "Magnetar applications"
   description: "The COSMIC applications built for Magnetar. jump replaces the stock launcher; the rest are yours to keep or remove."
@@ -123,6 +127,7 @@
      - slate
      - magnetar-pencil
      - pocket
+     - magnetar-accounts
 
 - name: "Gaming"
   description: "Steam, Proton and the CachyOS gaming stack"

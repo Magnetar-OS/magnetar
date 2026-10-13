@@ -33,3 +33,4 @@ peek|QuickLook-class file previewer for the COSMIC desktop|||magnetar-peek
 grabit|Selection actions for Wayland: copy, search, translate, transform, run||
 pencil|A rich text editor for the COSMIC desktop|||magnetar-pencil
 pocket|Passes, tickets and cards for the COSMIC desktop||
+magnetar-accounts|Online accounts for the COSMIC desktop||gnome-online-accounts-gtk: Google and Microsoft sign-in through GNOME Online Accounts
