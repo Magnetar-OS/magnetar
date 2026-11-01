@@ -18,11 +18,14 @@
 # one the previous run already released — is skipped, and the run goes on to
 # the next. Its lockfile, if other crates moved, is left uncommitted.
 #
-# Library crates are not released here. The cosmic-pim, jump-core,
-# peek-engine and pocket-core crates are toolkit-free and version on their own
-# schedule; cosmic-ext-widgets and cosmic-ext-nib are consumed by git tag, and
-# a new libcosmic reaches the applications through their own lockfiles
-# whether or not those tags move.
+# An application repository's own library crates (jump-core, peek-engine,
+# pocket-core, the locket-* crates) go to crates.io from the new tag once
+# release-kit has pushed it, through `suite-deps.sh publish`; release-kit does
+# not publish them, and locket's 3.2.0 and 3.2.1 were tagged and never reached
+# crates.io that way. The suite's library repositories — cosmic-ext-nib,
+# cosmic-pim, cosmic-ext-widgets — are released before the applications, in
+# the order docs/RELEASING.md gives; a new libcosmic reaches the applications
+# through their own lockfiles whether or not those tags move.
 set -euo pipefail
 
 # The suite is the directory the magnetar repository is checked out in, beside
@@ -68,6 +71,18 @@ while [ $# -gt 0 ]; do
 done
 [ ${#apps[@]} -gt 0 ] || apps=("${ALL_APPS[@]}")
 [ -f "$RELEASE_KIT" ] || { echo "release-kit not found at $RELEASE_KIT (set RELEASE_KIT)" >&2; exit 1; }
+
+# An app with crates to publish needs the token before its tag is pushed, not
+# after: a tag whose crates never reach crates.io is how locket fell behind.
+if [ "$dry_run" -eq 0 ] && [ -z "${CARGO_REGISTRY_TOKEN:-}" ]; then
+    for app in "${apps[@]}"; do
+        if (cd "$ROOT/$app" && cargo metadata --no-deps --format-version 1) |
+            python3 -c 'import json,sys; sys.exit(not any(p.get("publish") != [] for p in json.load(sys.stdin)["packages"]))'; then
+            echo "$app publishes crates to crates.io; set CARGO_REGISTRY_TOKEN first" >&2
+            exit 1
+        fi
+    done
+fi
 
 # The lockfiles a cargo update may rewrite: the app's own, and a fuzz
 # workspace's when it has one.
@@ -205,6 +220,7 @@ for app in "${apps[@]}"; do
     fi
 
     (cd "$dir" && node "$RELEASE_KIT" "${target[@]}" --yes)
+    "$HERE/suite-deps.sh" publish "$app"
 done
 
 released=()

@@ -6,9 +6,9 @@
 # and from any working directory.
 #
 # A throwaway suite: a copy of the scripts, the symlink, one application
-# repository with a remote and a release tag, and stand-ins for cargo and
-# node. Nothing here touches a real checkout, and the dry runs must leave the
-# application's history exactly as it was.
+# repository with a remote and a release tag, and stand-ins for cargo, node,
+# gh and cargo-upgrade. Nothing here touches a real checkout, and the dry runs
+# must leave the application's history exactly as it was.
 set -euo pipefail
 M="$(cd "$(dirname "$0")/.." && pwd)"
 w=$(mktemp -d); trap 'rm -rf "$w"' EXIT
@@ -23,10 +23,15 @@ suite="$(cd "$w/suite" && pwd -P)"
 cat > "$w/bin/cargo" <<'STUB'
 #!/usr/bin/env bash
 case "$1" in
-  metadata) printf '{"target_directory": "%s/target"}\n' "$PWD" ;;
+  metadata) printf '{"target_directory": "%s/target", "packages": [{"name": "app1", "version": "1.0.0", "publish": []}]}\n' "$PWD" ;;
 esac
 exit 0
 STUB
+# suite-deps.sh looks for cargo-edit's binary, and asks gh whether a tag's
+# release is published.
+printf '#!/usr/bin/env bash\nexit 0\n' > "$w/bin/cargo-upgrade"
+printf '#!/usr/bin/env bash\necho false\n' > "$w/bin/gh"
+chmod +x "$w/bin/cargo-upgrade" "$w/bin/gh"
 cat > "$w/bin/node" <<'STUB'
 #!/usr/bin/env bash
 echo "release-kit plan: $*"
@@ -53,7 +58,7 @@ git -C "$app" push -q -u origin main
 state() { command git -C "$app" rev-parse HEAD; command git -C "$app" tag; command git -C "$app" status --porcelain; }
 before="$(state)"
 
-run() { (cd / && PATH="$w/bin:$PATH" RELEASE_KIT="$w/release.mjs" bash "$@") > "$w/out" 2>&1; }
+run() { (cd / && PATH="$w/bin:$PATH" RELEASE_KIT="$w/release.mjs" SUITE_ORG_URL="$w/remotes" bash "$@") > "$w/out" 2>&1; }
 
 for via in scripts magnetar/tools/suite; do
   d="$suite/$via"
@@ -72,6 +77,18 @@ for via in scripts magnetar/tools/suite; do
     bad "$via/cargo-clean-all.sh -n exited non-zero:"; cat "$w/out"
   fi
 
+  if run "$d/suite-deps.sh" check; then
+    grep -qxF '==> app1' "$w/out" || { bad "$via/suite-deps.sh check did not look at app1:"; cat "$w/out"; }
+  else
+    bad "$via/suite-deps.sh check reported drift in a suite with none:"; cat "$w/out"
+  fi
+
+  if run "$d/suite-deps.sh" publish app1; then
+    grep -qF 'app1 v1.0.0: no crate to publish' "$w/out" || { bad "$via/suite-deps.sh publish app1:"; cat "$w/out"; }
+  else
+    bad "$via/suite-deps.sh publish app1 exited non-zero:"; cat "$w/out"
+  fi
+
   if run "$d/release-apps.sh" -n app1; then
     grep -qF 'Dry run: app1 would be released' "$w/out" || { bad "$via/release-apps.sh -n app1 did not reach its plan:"; cat "$w/out"; }
   else
@@ -80,6 +97,22 @@ for via in scripts magnetar/tools/suite; do
 done
 
 [[ "$(state)" == "$before" ]] || bad "a dry run changed app1's history, tags or working tree"
+
+# A git dependency on an older tag of a suite library is drift, and check
+# must say which.
+lib="$w/lib1"
+mkdir "$lib"
+git -C "$lib" init -q
+git -C "$lib" commit -q --allow-empty -m 'initial'
+git -C "$lib" tag v1.0.0
+git -C "$lib" commit -q --allow-empty -m 'next'
+git -C "$lib" tag v1.1.0
+git clone -q --bare "$lib" "$w/remotes/lib1.git"
+printf '[dependencies]\nlib1 = { git = "https://github.com/Magnetar-OS/lib1.git", tag = "v1.0.0" }\n' >> "$app/Cargo.toml"
+if run "$suite/scripts/suite-deps.sh" check; then
+  bad "suite-deps.sh check passed with app1 on lib1 v1.0.0 while v1.1.0 exists"
+fi
+grep -qF 'app1/Cargo.toml: lib1 v1.0.0 -> v1.1.0' "$w/out" || { bad "suite-deps.sh check did not name the stale tag:"; cat "$w/out"; }
 
 (( fail == 0 )) && echo PASS
 exit "$fail"

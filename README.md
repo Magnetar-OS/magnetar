@@ -20,7 +20,8 @@ anywhere else.
 | [`pkgbuilds/apps/apps.txt`](pkgbuilds/apps/apps.txt) | The suite, for local ISO-test builds. Releases ship from each app's own repository. |
 | [`pkgbuilds/magnetar-keyring`](pkgbuilds/magnetar-keyring/) | The trust root. Everything else is downstream of it. |
 | [`tools/`](tools/) | The generators, the audit and the signing step. |
-| [`tools/suite/`](tools/suite/) | Scripts that act on every repository checked out beside this one: the routine app release, and `cargo update` / `cargo clean` across the suite. |
+| [`tools/suite/`](tools/suite/) | Scripts that act on every repository checked out beside this one: the routine app release, dependency drift and crates.io publishing, and `cargo update` / `cargo clean` across the suite. |
+| [`docs/RELEASING.md`](docs/RELEASING.md) | The order the suite is updated, released and published in, so every crate finds its dependencies already out. |
 | [`docs/POP-OS-ADOPTION.md`](docs/POP-OS-ADOPTION.md) | What is worth taking from Pop!_OS, and what only looks like it is. |
 
 ## Three things worth knowing before reading the code
@@ -94,14 +95,16 @@ that the procedure behind every release has a history:
 
 ```sh
 tools/suite/release-apps.sh [-n] [-b minor|patch|auto] [app...]  # rebuild against current COSMIC, gate, release
+tools/suite/suite-deps.sh check|raise [repo...]|publish <repo>   # what is behind; raise it; publish a tag's crates
 tools/suite/cargo-update-all.sh [-n] [-c]                        # cargo update in every resolve root; never commits
 tools/suite/cargo-clean-all.sh [-n]                              # cargo clean in every resolve root, with sizes
 ```
 
 They find the suite from their own location (`<suite>/magnetar/tools/suite`),
 so they also run through the `<suite>/scripts` symlink that marks where they
-used to live. `tests/suite-scripts-root.sh` runs all three against a throwaway
-suite.
+used to live. `tests/suite-scripts-root.sh` runs them against a throwaway
+suite. The order they are used in for a release round is
+[`docs/RELEASING.md`](docs/RELEASING.md).
 
 ## Publishing
 
