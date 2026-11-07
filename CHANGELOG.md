@@ -49,9 +49,11 @@ configuration. The applications keep their own changelogs.
 ### Fixed
 
 - `magnetar-repo-audit` no longer fails on what `[cachyos]` took from Arch
-  between 2026-11-01 and 2026-11-02: `python-pathvalidate`,
+  between 2026-11-01 and 2026-11-07: `python-pathvalidate`,
   `python-tcolorpy`, `pahole` and `ostra-cg`, each a CachyOS rebuild of the
-  release Arch carries. `magnetar-repos` 0.1.0-9 ships the updated list.
+  release Arch carries; and, on CPUs below x86-64-v3, on `sentencepiece`,
+  `python-sentencepiece` and `noctalia-greeter`, where `[cachyos]` carries an
+  older build than Arch. `magnetar-repos` 0.1.0-10 ships the updated list.
 - `cutecosmic` 0.2.0-4 is built against `qt6-base` 6.12.0-3, so `pacman -Syu`
   can take that rebuild. 0.2.0-3 was pinned below it, and on every machine
   with `magnetar-desktop` the upgrade stopped on that dependency.

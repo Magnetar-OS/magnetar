@@ -139,6 +139,14 @@ cachyos:pacman-contrib
 cachyos:qrcodegen-cmake
 cachyos:qrcodegencpp-cmake
 cachyos:sddm
+# Overlapping since Arch took them into [extra] by 2026-11-07. Unlike the rest
+# of this list, [cachyos] lags Arch on these (sentencepiece and its Python
+# binding 0.2.2-2 against 0.2.3-1; noctalia-greeter 1.6.0 against 1.7.0), so a
+# baseline machine that installs one gets the older build. Magnetar installs
+# none of them: a tokenizer for ML tooling, and the greeter of another shell.
+cachyos:sentencepiece
+cachyos:python-sentencepiece
+cachyos:noctalia-greeter
 
 # Power and hardware
 cachyos:power-profiles-daemon
