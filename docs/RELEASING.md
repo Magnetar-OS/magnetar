@@ -115,15 +115,18 @@ already published is never re-released — bump instead.
 
 `raise` takes new majors like any other release, except for crates that must
 stay on the version another crate links. The list lives in `COUPLED` in
-`suite-deps.sh`; re-check it whenever libcosmic, imap or pgp move.
+`suite-deps.sh`. Re-check every reason at the start of a round, not only
+when `check` complains: an entry hides its crate from `check`, so a reason
+that stopped being true stays invisible. zbus left the list on 2026-11-07,
+when libcosmic moved to zbus 6.
 
 | Crate | Held at | Because |
 |---|---|---|
-| `zbus` | 5 | libcosmic, ashpd and dbus-settings-bindings are on zbus 5, and apps pass zvariant values through libcosmic |
-| `ashpd` | 0.12 (pencil, pocket) | libcosmic links 0.12; a second copy would be linked |
+| `ashpd` | 0.13 (pencil, pocket, locket) | libcosmic links 0.13; 0.14 would link a second copy |
 | `usvg` | 0.45 (circle, dev) | the tests parse with the copy iced's resvg links |
 | `imap-proto` | 0.16 (cosmic-pim-mail) | imap 3.0.0-alpha.15 requires it, and LIST attributes come back as its types |
 | `rand` as `rand_pgp` | 0.8 (cosmic-pim-mail) | pgp 0.21 requires rand 0.8 |
+| `rsa` | `=0.10.0-rc.19` (locket) | ssh-key 0.7.0-rc.11, the newest, asks for rsa's `sha2` feature, which rc.20 removed |
 
 Exact (`=`) pins exist in one place: locket's `rsa` and `ssh-key` release
 candidates, which promise each other nothing. Its manifest says how to move
@@ -136,7 +139,13 @@ not accept 7; its README says so.
   name the same release. Edit those two places per repo; never a blind text
   replace, which has rewritten released changelog entries before.
 - **linux-release-kit**: every app pins its workflows to one commit. Move them
-  all together.
+  all together; read the kit's commits since the old pin for new required
+  inputs, secrets or permissions first.
+- **Git dependencies that follow a branch** (libcosmic, cosmic-launch,
+  dbus-settings-bindings): `cargo update` moves them, and a crate can be
+  renamed or moved to a new major underneath (2026-11-07: dbus-settings-bindings
+  renamed `switcheroo-control` to `switcheroo-control-zbus` on zbus 6). Build
+  every repository after the update, before raising anything else.
 - **GitHub Actions**: the pins in each repo's `.github/workflows`.
 - **magnetar-web**: `pnpm up --latest`, then `pnpm test`.
 - **Distro packages** (`pkgbuilds/`): the Packages workflow publishes any

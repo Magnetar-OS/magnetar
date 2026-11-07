@@ -19,7 +19,8 @@
 # Requirements are raised with `cargo upgrade --incompatible allow`, so a new
 # major is taken like any other release. The crates in COUPLED are the
 # exception: each must stay on the version another crate links, and moves only
-# when that crate does. Re-check the list whenever libcosmic, imap or pgp move.
+# when that crate does. Re-check the list whenever libcosmic, imap or pgp move;
+# zbus left it on 2026-11-07, when libcosmic moved to zbus 6.
 set -euo pipefail
 
 HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
@@ -30,11 +31,11 @@ ORG_URL="${SUITE_ORG_URL:-https://github.com/Magnetar-OS}"
 
 # name  why it is held
 COUPLED=(
-    "zbus        libcosmic, ashpd and dbus-settings-bindings are on zbus 5, and apps pass zvariant values through libcosmic"
-    "ashpd       pencil and pocket share libcosmic's copy so no second one is linked"
+    "ashpd       every app stays on the ashpd libcosmic links (0.13), so no second copy is linked"
     "usvg        circle's tests parse with the copy iced's resvg links"
     "imap-proto  imap 3.0.0-alpha.15 requires 0.16, and LIST attributes come back as its types"
     "rand        cosmic-pim-mail's rand_pgp is the rand pgp 0.21 requires (0.8)"
+    "rsa         locket's exact pin: ssh-key 0.7.0-rc.11 asks for rsa's sha2 feature, which rc.20 removed"
 )
 
 usage() {
