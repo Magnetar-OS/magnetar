@@ -25,7 +25,7 @@ cat > "$w/bin/cargo" <<'STUB'
 case "$1" in
   # A repository can give its own metadata in meta.json; the default is app1's.
   metadata) if [ -f meta.json ]; then cat meta.json; else
-      printf '{"target_directory": "%s/target", "packages": [{"name": "app1", "version": "1.0.0", "publish": []}]}\n' "$PWD"; fi ;;
+      printf '{"target_directory": "%s/target", "packages": [{"id": "app1", "name": "app1", "version": "1.0.0", "publish": []}], "workspace_members": ["app1"], "resolve": {"nodes": [{"id": "app1", "deps": []}]}}\n' "$PWD"; fi ;;
 esac
 exit 0
 STUB
@@ -155,6 +155,26 @@ if run "$suite/scripts/suite-deps.sh" upstream app2; then
   bad "upstream let app2 go on lib2 v1.0.0 while v1.1.0 is out"
 fi
 grep -qF 'app2 uses lib2 v1.0.0, not v1.1.0' "$w/out" || { bad "upstream did not name the stale tag:"; cat "$w/out"; }
+
+# A follower is checked against its leader's copy, and raise's fix moves it
+# there: app3's usvg must be the one resvg links.
+mk app3 '{"packages": [
+  {"id": "app3", "name": "app3", "version": "1.0.0", "publish": [], "manifest_path": "'"$suite"'/app3/Cargo.toml"},
+  {"id": "resvg", "name": "resvg", "version": "0.45.1"},
+  {"id": "usvg-old", "name": "usvg", "version": "0.45.1"},
+  {"id": "usvg-new", "name": "usvg", "version": "0.49.0"}],
+ "workspace_members": ["app3"],
+ "resolve": {"nodes": [
+  {"id": "app3", "deps": [{"name": "usvg", "pkg": "usvg-new"}, {"name": "resvg", "pkg": "resvg"}]},
+  {"id": "resvg", "deps": [{"name": "usvg", "pkg": "usvg-old"}]}]}}'
+printf '[dependencies]\nusvg = "0.49"\n' >> "$suite/app3/Cargo.toml"
+graph() { PATH="$w/bin:$PATH" python3 -B "$suite/magnetar/tools/suite/lib/suite_graph.py" "$@" > "$w/out" 2>&1; }
+if graph follows "$suite/app3" usvg:resvg; then
+  bad "follows passed with app3 on usvg 0.49 while resvg links 0.45.1"
+fi
+grep -qF 'usvg is linked at 0.49.0; resvg links 0.45.1' "$w/out" || { bad "follows did not name the mismatch:"; cat "$w/out"; }
+graph follows --fix "$suite/app3" usvg:resvg
+grep -qxF 'usvg = "0.45"' "$suite/app3/Cargo.toml" || { bad "follows --fix did not move app3's usvg to 0.45:"; cat "$suite/app3/Cargo.toml"; }
 
 (( fail == 0 )) && echo PASS
 exit "$fail"

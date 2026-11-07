@@ -7,6 +7,12 @@ Run by suite-deps.sh, never on its own:
     suite_graph.py upstream ROOT REPO DIR...  exit 1 unless every suite
                                               repository REPO depends on is
                                               released and picked up by REPO
+    suite_graph.py follows [--fix] DIR KEY:LEADER...
+                                              exit 1 when the root DIR links
+                                              the dependency KEY at another
+                                              version than LEADER does; --fix
+                                              rewrites DIR's requirements to
+                                              LEADER's version
 
 DIR... are the resolve roots suite-deps.sh found. A crate belongs to the
 repository whose checkout holds it, and REPO depends on another repository
@@ -116,7 +122,67 @@ def problems(root, repo, owner, deps):
     return sorted(set(found))
 
 
+def follows(directory, pairs, fix):
+    """Check, or fix, that each CRATE in `directory` is LEADER's copy.
+
+    Some requirements are right only as the same copy another crate links:
+    a test that parses with the renderer's own parser, an enum the client
+    library hands back. Excluded from `raise`, they would sit until someone
+    noticed the leader had moved; checked here, they move with it.
+    """
+    # A check must not rewrite the lockfile; a fix is followed by cargo update.
+    locked = () if fix else ("--locked",)
+    meta = json.loads(run("cargo", "metadata", "--format-version", "1", *locked,
+                          cwd=directory))
+    packages = {p["id"]: p for p in meta["packages"]}
+    members = set(meta["workspace_members"])
+    found = []
+    for pair in pairs:
+        # KEY is the dependency as our manifests name it (`rand_pgp` for a
+        # renamed `rand`); LEADER is the crate whose copy it has to be.
+        key, leader = pair.split(":")
+        extern = key.replace("-", "_")
+        crates, ours = set(), set()
+        for node in meta["resolve"]["nodes"]:
+            if node["id"] not in members:
+                continue
+            for dep in node["deps"]:
+                if dep["name"] == extern:
+                    crates.add(packages[dep["pkg"]]["name"])
+                    ours.add(packages[dep["pkg"]]["version"])
+        wanted = {packages[dep["pkg"]]["version"]
+                  for node in meta["resolve"]["nodes"]
+                  if packages[node["id"]]["name"] == leader
+                  for dep in node["deps"]
+                  if packages[dep["pkg"]]["name"] in crates}
+        if not wanted or not ours or ours <= wanted:
+            continue
+        target = max(wanted, key=lambda v: [int(x) for x in re.findall(r"\d+", v)])
+        found.append(f"{key} is linked at {', '.join(sorted(ours))}; "
+                     f"{leader} links {target}, which it has to follow")
+        if fix:
+            major_minor = ".".join(target.split(".")[:2])
+            for manifest in {packages[m]["manifest_path"] for m in members}:
+                rewrite_requirement(Path(manifest), key, major_minor)
+    return found
+
+
+def rewrite_requirement(manifest, key, version):
+    """Set the version of the dependency named `key` in `manifest`."""
+    out = []
+    for line in manifest.read_text().splitlines(keepends=True):
+        if re.match(rf"^\s*{re.escape(key)}\s*=\s*\"", line):
+            line = re.sub(r'=\s*"[^"]*"', f'= "{version}"', line, count=1)
+        elif re.match(rf"^\s*{re.escape(key)}\s*=\s*\{{", line):
+            line = re.sub(r'version\s*=\s*"[^"]*"', f'version = "{version}"', line, count=1)
+        out.append(line)
+    manifest.write_text("".join(out))
+
+
 def main():
+    if sys.argv[1] == "follows":
+        follows_main(sys.argv[2:])
+        return
     mode, root = sys.argv[1], Path(sys.argv[2])
     if mode == "order":
         owner, deps = load(root, sys.argv[3:])
@@ -132,6 +198,15 @@ def main():
         sys.exit(1 if found else 0)
     else:
         sys.exit(f"unknown mode {mode}")
+
+
+def follows_main(args):
+    fix = args[:1] == ["--fix"]
+    args = args[1:] if fix else args
+    found = follows(Path(args[0]), args[1:], fix)
+    for line in found:
+        print(f"  {line}{' (fixed)' if fix else ''}")
+    sys.exit(1 if found and not fix else 0)
 
 
 if __name__ == "__main__":

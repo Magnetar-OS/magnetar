@@ -58,9 +58,10 @@ scripts/suite-deps.sh order    # the order to release in, from the manifests
 
 `check` lists, per repository: requirements behind their latest release, git
 dependencies on an older Magnetar-OS tag than the newest, publishable crates
-whose version is not on crates.io, and a newest tag with no published GitHub
-release. It exits 1 while anything is listed. The crates it holds back on
-purpose are printed at the end with the reason (see below).
+whose version is not on crates.io, a newest tag with no published GitHub
+release, and a followed dependency off its leader's version. It exits 1 while
+anything is listed. The followed dependencies are printed at the end (see
+below).
 
 `order` prints every repository after each suite repository its crates
 depend on — from crates.io, by git tag, or as a dev-dependency. Work down
@@ -122,27 +123,33 @@ A failed Release run is re-run with `gh run rerun <id> --failed` or
 `gh workflow run release.yml -f tag=vX.Y.Z`. The tag never moves; a version
 already published is never re-released — bump instead.
 
-## Held back on purpose
+## Followed, not raised on their own
 
-`raise` takes new majors like any other release, except for crates that must
-stay on the version another crate links. The list lives in `COUPLED` in
-`suite-deps.sh`. Re-check every reason at the start of a round, not only
-when `check` complains: an entry hides its crate from `check`, so a reason
-that stopped being true stays invisible. zbus left the list on 2026-11-07,
-when libcosmic moved to zbus 6.
+`raise` takes new majors like any other release. A few dependencies are
+right only as the same copy another crate links, so they are not raised on
+their own: they *follow* that crate. `FOLLOWS` in `suite-deps.sh` lists them
+as dependency key, leader, reason. `check` verifies each links its leader's
+version (`lib/suite_graph.py follows`), and `raise` puts it on that version
+after everything else is upgraded, so it moves the day its leader does.
 
-| Crate | Held at | Because |
+| Dependency | Follows | Because |
 |---|---|---|
-| `ashpd` | 0.13 (pencil, pocket, locket) | libcosmic links 0.13; 0.14 would link a second copy |
-| `usvg` | 0.45 (circle, dev) | the tests parse with the copy iced's resvg links |
-| `imap-proto` | 0.16 (cosmic-pim-mail) | imap 3.0.0-alpha.15 requires it, and LIST attributes come back as its types |
-| `rand` as `rand_pgp` | 0.8 (cosmic-pim-mail) | pgp 0.21 requires rand 0.8 |
-| `rsa` | `=0.10.0-rc.19` (locket) | ssh-key 0.7.0-rc.11, the newest, asks for rsa's `sha2` feature, which rc.20 removed |
+| `usvg` (circle, dev) | `resvg` (iced) | the tests parse with the parser iced renders with |
+| `imap-proto` (cosmic-pim-mail) | `imap` | LIST and UID-set answers come back as imap-proto's types, which imap does not re-export |
+| `rand_pgp` (cosmic-pim-mail, dev) | `pgp` | the tests generate keys, and pgp's key generation takes its own rand's traits |
+
+Before 2026-11-07 the list was crates held back by hand, which hid them
+from `check` until someone re-read the reasons. zbus and ashpd left it for
+their latest releases (ashpd 0.14 links beside libcosmic's 0.13, since no
+ashpd type crosses into libcosmic), and rsa left it when locket stopped
+needing ssh-key's `rsa` feature — the feature that asked for an rsa feature
+rc.20 removed.
 
 Exact (`=`) pins exist in one place: locket's `rsa` and `ssh-key` release
-candidates, which promise each other nothing. Its manifest says how to move
-them. magnetar-web keeps `typescript` at 6.0.3 because `@astrojs/check` does
-not accept 7; its README says so.
+candidates, which promise each other nothing; its manifest says how to move
+them, and `check` lists a newer release candidate when one appears.
+magnetar-web keeps `typescript` at 6.0.3 because `@astrojs/check` (0.9.12,
+the newest) does not accept 7; its README says so.
 
 ## What is not a Cargo crate
 

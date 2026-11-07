@@ -22,10 +22,13 @@
 #                    crate changed under a version crates.io already has
 #
 # Requirements are raised with `cargo upgrade --incompatible allow`, so a new
-# major is taken like any other release. The crates in COUPLED are the
-# exception: each must stay on the version another crate links, and moves only
-# when that crate does. Re-check the list whenever libcosmic, imap or pgp move;
-# zbus left it on 2026-11-07, when libcosmic moved to zbus 6.
+# major is taken like any other release. The dependencies in FOLLOWS are the
+# exception: each is right only as the same copy another crate links, so it
+# is not raised on its own — `check` verifies it links its leader's version,
+# and `raise` moves it to that version whenever the leader moves.
+# (Until 2026-11-07 a static list held zbus, ashpd and rsa back too; zbus and
+# ashpd moved to their latest, and locket stopped needing ssh-key's rsa
+# feature, which was what pinned rsa.)
 set -euo pipefail
 
 HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
@@ -34,13 +37,11 @@ ROOT="$(cd -- "$HERE/../../.." && pwd)"
 # points it at local bare repositories.
 ORG_URL="${SUITE_ORG_URL:-https://github.com/Magnetar-OS}"
 
-# name  why it is held
-COUPLED=(
-    "ashpd       every app stays on the ashpd libcosmic links (0.13), so no second copy is linked"
-    "usvg        circle's tests parse with the copy iced's resvg links"
-    "imap-proto  imap 3.0.0-alpha.15 requires 0.16, and LIST attributes come back as its types"
-    "rand        cosmic-pim-mail's rand_pgp is the rand pgp 0.21 requires (0.8)"
-    "rsa         locket's exact pin: ssh-key 0.7.0-rc.11 asks for rsa's sha2 feature, which rc.20 removed"
+# dependency (as manifests name it)  the crate whose copy it must be  why
+FOLLOWS=(
+    "usvg        resvg  circle's tests parse with the parser iced renders with"
+    "imap-proto  imap   cosmic-pim-mail matches on the attribute types imap hands back"
+    "rand_pgp    pgp    cosmic-pim-mail's tests generate keys with the rand pgp takes"
 )
 
 usage() {
@@ -56,17 +57,21 @@ check    report requirements, Magnetar-OS tags, crates.io versions and GitHub
 order    the repositories in release order, each after what it depends on
 upstream exit 1 unless every suite repository REPO depends on is released
          and REPO requires and locks that release
-raise    raise requirements to their latest releases (except the coupled
-         crates), move Magnetar-OS tags to the newest, refresh the lockfiles;
+raise    raise requirements to their latest releases (a follower to its
+         leader's version), move Magnetar-OS tags to the newest, refresh the lockfiles;
          every repo when none is named; commits nothing
 publish  publish REPO's crates that crates.io lacks, from REPO's newest tag;
          needs CARGO_REGISTRY_TOKEN
 USAGE
 }
 
-coupled_flags() {
-    local entry
-    for entry in "${COUPLED[@]}"; do printf -- '--exclude\n%s\n' "${entry%% *}"; done
+# KEY:LEADER for each FOLLOWS entry, as lib/suite_graph.py takes them.
+follow_pairs() {
+    local entry key leader
+    for entry in "${FOLLOWS[@]}"; do
+        read -r key leader _ <<<"$entry"
+        printf '%s:%s\n' "$key" "$leader"
+    done
 }
 
 # The newest vX.Y.Z tag a repository has pushed.
@@ -141,16 +146,23 @@ suite_tags() {
 }
 
 cmd_check() {
-    local dir rel behind=0 rows name version tag
-    mapfile -t ex < <(coupled_flags)
+    local dir rel behind=0 rows name version tag keys
+    mapfile -t pairs < <(follow_pairs)
+    keys="$(printf '%s\n' "${pairs[@]%%:*}")"
     for dir in "${roots[@]}"; do
         rel="$(rel_to_root "$dir")"
         echo "==> $rel"
         # cargo-edit prints one table per manifest; any row under a header is
-        # a requirement behind its latest release.
-        rows="$(cd -- "$dir" && cargo upgrade --dry-run --incompatible allow --pinned allow "${ex[@]}" 2>/dev/null |
-                awk '/^====/{t=1; next} /^name /{next} t && NF>=4 {print "  " $0} /^$/{t=0}')"
+        # a requirement behind its latest release. A follower's row is left
+        # out — "rand (rand_pgp)" names its key in brackets — because its
+        # version is the leader's to set, and is checked below.
+        rows="$(cd -- "$dir" && cargo upgrade --dry-run --incompatible allow --pinned allow 2>/dev/null |
+                awk -v keys="$keys" 'BEGIN{n=split(keys,k,"\n"); for(i=1;i<=n;i++) skip[k[i]]=1}
+                     /^====/{t=1; next} /^name /{next} /^$/{t=0}
+                     t && NF>=4 {key=$1; if ($2 ~ /^\(.*\)$/) key=substr($2,2,length($2)-2);
+                                 if (!(key in skip)) print "  " $0}')"
         if [ -n "$rows" ]; then echo "$rows"; behind=1; fi
+        python3 -B "$HERE/lib/suite_graph.py" follows "$dir" "${pairs[@]}" || behind=1
         suite_tags "$dir" check || behind=1
         # A fuzz workspace's crates are never published, and only a
         # repository's top level has releases.
@@ -172,18 +184,22 @@ cmd_check() {
         done < <(publishable "$dir")
     done
     echo
-    echo "held on purpose:"
-    printf '  %s\n' "${COUPLED[@]}"
+    echo "followed, not raised on their own:"
+    printf '  %s\n' "${FOLLOWS[@]}"
     return "$behind"
 }
 
 cmd_raise() {
     local dir
-    mapfile -t ex < <(coupled_flags)
+    mapfile -t pairs < <(follow_pairs)
     for dir in "${roots[@]}"; do
         echo "==> $(rel_to_root "$dir")"
         suite_tags "$dir"
-        (cd -- "$dir" && cargo upgrade --incompatible allow "${ex[@]}" && cargo update)
+        # Everything to its latest, then each follower back onto its leader's
+        # version — which is where it moves when the leader moves.
+        (cd -- "$dir" && cargo upgrade --incompatible allow &&
+            python3 -B "$HERE/lib/suite_graph.py" follows --fix "$dir" "${pairs[@]}" &&
+            cargo update)
     done
 }
 
