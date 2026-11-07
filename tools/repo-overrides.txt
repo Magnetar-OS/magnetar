@@ -152,6 +152,18 @@ cachyos:umu-launcher
 cachyos:python-dataclasses-json
 cachyos:voa-verifiers-arch
 cachyos:lib32-freeglut
+# CachyOS pkgrel rebuilds of the same upstream releases (pathvalidate 3.3.1-2
+# and tcolorpy 0.1.7-2 over extra's -1), joined by 2026-11-01. Pure-Python
+# libraries; only bottles and AUR tools require pathvalidate, nothing in
+# [extra] requires tcolorpy, and Magnetar installs neither by default.
+cachyos:python-pathvalidate
+cachyos:python-tcolorpy
+# pahole and its split ostra-cg, joined 2026-11-02 (1:1.32-2 over extra's -1,
+# same upstream release). pahole generates the BTF every kernel's -headers
+# package builds modules with, and Magnetar runs CachyOS's kernels, so CachyOS
+# shipping the pahole its own kernels are built with is the coherent source.
+cachyos:pahole
+cachyos:ostra-cg
 
 # Desktop — NOT inherited by Magnetar.
 # plasma-login-manager and dms-shell are CachyOS's Plasma session pieces.
