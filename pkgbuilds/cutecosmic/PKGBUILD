@@ -34,14 +34,14 @@
 #   3. publish both together
 pkgname=cutecosmic
 pkgver=0.2.0
-pkgrel=3
+pkgrel=4
 pkgdesc="Qt platform theme for the COSMIC desktop"
 arch=('x86_64')
 url="https://github.com/IgKh/cutecosmic"
 license=('GPL-3.0-or-later')
 
 depends=(
-  'qt6-base>=6.12.0-2' 'qt6-base<6.12.0-3'
+  'qt6-base>=6.12.0-3' 'qt6-base<6.12.0-4'
   'qt6-declarative'
 )
 makedepends=('cargo' 'cmake' 'git')

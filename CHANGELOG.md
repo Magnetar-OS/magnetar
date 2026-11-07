@@ -48,6 +48,9 @@ configuration. The applications keep their own changelogs.
 
 ### Fixed
 
+- `cutecosmic` 0.2.0-4 is built against `qt6-base` 6.12.0-3, so `pacman -Syu`
+  can take that rebuild. 0.2.0-3 was pinned below it, and on every machine
+  with `magnetar-desktop` the upgrade stopped on that dependency.
 - `cutecosmic` 0.2.0-3 is built against Qt 6.12, so `pacman -Syu` can take
   `qt6-base` 6.12.0. The previous build was pinned to Qt 6.11.2, and on every
   machine with `magnetar-desktop` the upgrade stopped on that dependency. Upstream cutecosmic 0.2.0
