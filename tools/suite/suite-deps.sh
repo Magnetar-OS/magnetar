@@ -12,6 +12,11 @@
 #                    GitHub release; exits 1 when anything is behind
 #   raise [repo...]  move those requirements and tags to the newest and refresh
 #                    the lockfiles; commits nothing
+#   order            the repositories in the order a round releases them:
+#                    each after every suite repository it depends on
+#   upstream REPO    exit 1 unless every suite repository REPO depends on is
+#                    released and REPO is raised to it — the gate
+#                    release-apps.sh runs before releasing an app
 #   publish REPO     publish REPO's crates that crates.io does not have yet,
 #                    from a clean worktree of REPO's newest tag; fails when a
 #                    crate changed under a version crates.io already has
@@ -41,11 +46,16 @@ COUPLED=(
 usage() {
     cat <<'USAGE'
 usage: suite-deps.sh check
+       suite-deps.sh order
        suite-deps.sh raise [repo...]
+       suite-deps.sh upstream REPO
        suite-deps.sh publish REPO
 
 check    report requirements, Magnetar-OS tags, crates.io versions and GitHub
          releases that are behind; exit 1 when anything is
+order    the repositories in release order, each after what it depends on
+upstream exit 1 unless every suite repository REPO depends on is released
+         and REPO requires and locks that release
 raise    raise requirements to their latest releases (except the coupled
          crates), move Magnetar-OS tags to the newest, refresh the lockfiles;
          every repo when none is named; commits nothing
@@ -242,6 +252,13 @@ case "$1" in
             roots=("${keep[@]}")
         fi
         cmd_raise ;;
+    order)
+        discover_roots 2>/dev/null
+        python3 -B "$HERE/lib/suite_graph.py" order "$ROOT" "${roots[@]}" ;;
+    upstream)
+        [ $# -eq 2 ] || { usage >&2; exit 2; }
+        discover_roots 2>/dev/null
+        python3 -B "$HERE/lib/suite_graph.py" upstream "$ROOT" "$2" "${roots[@]}" ;;
     publish)
         [ $# -eq 2 ] || { usage >&2; exit 2; }
         cmd_publish "$2" ;;

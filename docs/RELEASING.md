@@ -53,13 +53,20 @@ ago'`, `git status`); stage with explicit paths, never `git add -A`.
 
 ```sh
 scripts/suite-deps.sh check
+scripts/suite-deps.sh order    # the order to release in, from the manifests
 ```
 
-It lists, per repository: requirements behind their latest release, git
+`check` lists, per repository: requirements behind their latest release, git
 dependencies on an older Magnetar-OS tag than the newest, publishable crates
 whose version is not on crates.io, and a newest tag with no published GitHub
 release. It exits 1 while anything is listed. The crates it holds back on
 purpose are printed at the end with the reason (see below).
+
+`order` prints every repository after each suite repository its crates
+depend on — from crates.io, by git tag, or as a dev-dependency. Work down
+that list: a repository is raised and released only once everything above
+it that it uses is published. Released the other way round, a consumer
+ships on the old library and has to be released again.
 
 **2. Release the libraries, upstream first.** For each of `cosmic-ext-nib`,
 then `cosmic-pim`, then `cosmic-ext-widgets`, if `check` lists it:
@@ -88,7 +95,11 @@ scripts/release-apps.sh -b patch <app>...
 release-kit and then runs `suite-deps.sh publish <app>`, so jump-core,
 peek-engine, pocket-core and the locket crates go to crates.io from the same
 tag. It refuses to start without `CARGO_REGISTRY_TOKEN` when an app has
-crates to publish.
+crates to publish, and it refuses to release an app until
+`suite-deps.sh upstream <app>` passes: every suite repository the app uses
+has no unreleased changes since its newest tag (lockfiles, Markdown and CI
+aside), the app is on that tag, and its lockfile resolves that release of
+each crates.io crate.
 
 The locket crates share the application's version, so every locket release
 publishes them. **jump-core, peek-engine and pocket-core keep versions of

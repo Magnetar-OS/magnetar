@@ -95,7 +95,7 @@ that the procedure behind every release has a history:
 
 ```sh
 tools/suite/release-apps.sh [-n] [-b minor|patch|auto] [app...]  # rebuild against current COSMIC, gate, release
-tools/suite/suite-deps.sh check|raise [repo...]|publish <repo>   # what is behind; raise it; publish a tag's crates
+tools/suite/suite-deps.sh check|order|raise [repo...]|upstream <repo>|publish <repo>  # what is behind; release order; raise; may it be released; publish
 tools/suite/cargo-update-all.sh [-n] [-c]                        # cargo update in every resolve root; never commits
 tools/suite/cargo-clean-all.sh [-n]                              # cargo clean in every resolve root, with sizes
 ```

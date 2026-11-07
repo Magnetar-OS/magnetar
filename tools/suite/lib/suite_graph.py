@@ -1,0 +1,138 @@
+# SPDX-License-Identifier: GPL-3.0-only
+"""Which suite repositories depend on which, and whether one may be released.
+
+Run by suite-deps.sh, never on its own:
+
+    suite_graph.py order ROOT DIR...          the repositories in release order
+    suite_graph.py upstream ROOT REPO DIR...  exit 1 unless every suite
+                                              repository REPO depends on is
+                                              released and picked up by REPO
+
+DIR... are the resolve roots suite-deps.sh found. A crate belongs to the
+repository whose checkout holds it, and REPO depends on another repository
+when any of REPO's crates names one of that repository's crates — from
+crates.io, by git tag, or as a dev-dependency.
+
+The release order follows from it: a library is published before anything
+that requires it is raised, and a consumer is raised to it before the
+consumer is released. Releasing in another order ships a consumer built on
+the old library, and it has to be released a second time.
+"""
+
+import json
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+# A change in these alone does not need a release for consumers to pick up.
+NOT_RELEASED_CONTENT = (":(exclude)Cargo.lock", ":(exclude)*/Cargo.lock",
+                        ":(exclude)*.md", ":(exclude).github")
+
+
+def run(*args, cwd):
+    return subprocess.run(args, cwd=cwd, check=True, capture_output=True,
+                          text=True).stdout
+
+
+def load(root, dirs):
+    """Crate -> repository, and per repository its crates' dependencies."""
+    owner, deps = {}, {}
+    for d in map(Path, dirs):
+        if d.parent != root:  # a fuzz workspace belongs to its repository
+            continue
+        meta = json.loads(run("cargo", "metadata", "--no-deps",
+                              "--format-version", "1", cwd=d))
+        for package in meta["packages"]:
+            owner[package["name"]] = d.name
+            deps.setdefault(d.name, []).extend(package.get("dependencies", []))
+    return owner, deps
+
+
+def upstream_of(repo, owner, deps):
+    return sorted({owner[dep["name"]] for dep in deps.get(repo, [])
+                   if owner.get(dep["name"], repo) != repo})
+
+
+def order(owner, deps):
+    """Every repository after all it depends on; ties alphabetically."""
+    pending = {r: set(upstream_of(r, owner, deps)) for r in deps}
+    done = []
+    while pending:
+        ready = sorted(r for r, up in pending.items() if up <= set(done))
+        if not ready:
+            sys.exit(f"dependency cycle among: {', '.join(sorted(pending))}")
+        for r in ready:
+            done.append(r)
+            del pending[r]
+    return done
+
+
+def locked(lockfile):
+    """Crate name -> the versions a Cargo.lock resolves it to."""
+    versions = {}
+    if lockfile.exists():
+        for name, version in re.findall(r'^name = "([^"]+)"\nversion = "([^"]+)"',
+                                        lockfile.read_text(), re.M):
+            versions.setdefault(name, set()).add(version)
+    return versions
+
+
+def problems(root, repo, owner, deps):
+    found = []
+    lock = locked(root / repo / "Cargo.lock")
+    for up in upstream_of(repo, owner, deps):
+        up_dir = root / up
+        try:
+            tag = run("git", "describe", "--tags", "--abbrev=0", cwd=up_dir).strip()
+        except subprocess.CalledProcessError:
+            found.append(f"{up} has never been released; release it before {repo}")
+            continue
+        changed = run("git", "diff", "--name-only", tag, "HEAD", "--", ".",
+                      *NOT_RELEASED_CONTENT, cwd=up_dir).split()
+        if changed:
+            found.append(f"{up} has changes since {tag} that are not released "
+                         f"({', '.join(changed[:4])}{', ...' if len(changed) > 4 else ''}); "
+                         f"release {up} before {repo}")
+        versions = {p["name"]: p["version"] for p in json.loads(run(
+            "cargo", "metadata", "--no-deps", "--format-version", "1",
+            cwd=up_dir))["packages"]}
+        for dep in deps[repo]:
+            if owner.get(dep["name"]) != up:
+                continue
+            source = dep.get("source") or ""
+            if source.startswith("git+"):
+                used = re.search(r"[?&]tag=([^&#]+)", source)
+                if used and used.group(1) != tag:
+                    found.append(f"{repo} uses {up} {used.group(1)}, not {tag}; "
+                                 f"raise {repo} first")
+            elif source.startswith("registry+"):
+                want = versions.get(dep["name"])
+                have = lock.get(dep["name"], set())
+                if want and want not in have:
+                    found.append(f"{repo} locks {dep['name']} "
+                                 f"{', '.join(sorted(have)) or 'nothing'}, not {want}; "
+                                 f"raise {repo} first")
+    return sorted(set(found))
+
+
+def main():
+    mode, root = sys.argv[1], Path(sys.argv[2])
+    if mode == "order":
+        owner, deps = load(root, sys.argv[3:])
+        for repo in order(owner, deps):
+            up = upstream_of(repo, owner, deps)
+            print(repo + (f"  (after {', '.join(up)})" if up else ""))
+    elif mode == "upstream":
+        repo = sys.argv[3]
+        owner, deps = load(root, sys.argv[4:])
+        found = problems(root, repo, owner, deps)
+        for line in found:
+            print(f"  {line}")
+        sys.exit(1 if found else 0)
+    else:
+        sys.exit(f"unknown mode {mode}")
+
+
+if __name__ == "__main__":
+    main()

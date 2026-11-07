@@ -169,6 +169,13 @@ for app in "${apps[@]}"; do
     (cd "$dir" && cargo update --quiet)
     [ ! -f "$dir/fuzz/Cargo.lock" ] || (cd "$dir/fuzz" && cargo update --quiet)
     after="$(libcosmic_rev <"$dir/Cargo.lock")"
+
+    # Libraries first: an app released before a suite library it uses is out
+    # and picked up ships the old library, and is released a second time.
+    if ! "$HERE/suite-deps.sh" upstream "$app"; then
+        echo "$app: release what it depends on first, then raise it (docs/RELEASING.md)" >&2
+        exit 1
+    fi
     [ ${#target[@]} -gt 0 ] || before="$after"
     echo "libcosmic: ${before:-?} -> ${after:-?}"
 

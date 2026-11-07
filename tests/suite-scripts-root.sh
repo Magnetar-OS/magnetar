@@ -23,7 +23,9 @@ suite="$(cd "$w/suite" && pwd -P)"
 cat > "$w/bin/cargo" <<'STUB'
 #!/usr/bin/env bash
 case "$1" in
-  metadata) printf '{"target_directory": "%s/target", "packages": [{"name": "app1", "version": "1.0.0", "publish": []}]}\n' "$PWD" ;;
+  # A repository can give its own metadata in meta.json; the default is app1's.
+  metadata) if [ -f meta.json ]; then cat meta.json; else
+      printf '{"target_directory": "%s/target", "packages": [{"name": "app1", "version": "1.0.0", "publish": []}]}\n' "$PWD"; fi ;;
 esac
 exit 0
 STUB
@@ -83,6 +85,14 @@ for via in scripts magnetar/tools/suite; do
     bad "$via/suite-deps.sh check reported drift in a suite with none:"; cat "$w/out"
   fi
 
+  if run "$d/suite-deps.sh" order; then
+    grep -qxF 'app1' "$w/out" || { bad "$via/suite-deps.sh order did not list app1:"; cat "$w/out"; }
+  else
+    bad "$via/suite-deps.sh order exited non-zero:"; cat "$w/out"
+  fi
+
+  run "$d/suite-deps.sh" upstream app1 || { bad "$via/suite-deps.sh upstream app1 refused an app with no suite dependencies:"; cat "$w/out"; }
+
   if run "$d/suite-deps.sh" publish app1; then
     grep -qF 'app1 v1.0.0: no crate to publish' "$w/out" || { bad "$via/suite-deps.sh publish app1:"; cat "$w/out"; }
   else
@@ -113,6 +123,38 @@ if run "$suite/scripts/suite-deps.sh" check; then
   bad "suite-deps.sh check passed with app1 on lib1 v1.0.0 while v1.1.0 exists"
 fi
 grep -qF 'app1/Cargo.toml: lib1 v1.0.0 -> v1.1.0' "$w/out" || { bad "suite-deps.sh check did not name the stale tag:"; cat "$w/out"; }
+
+# Libraries first: an app whose suite library has unreleased changes, or
+# which is still on an older tag of it, must not be released.
+mk() {  # mk REPO METADATA-JSON
+  mkdir "$suite/$1"
+  printf '[package]\nname = "%s"\nversion = "1.0.0"\n' "$1" > "$suite/$1/Cargo.toml"
+  : > "$suite/$1/Cargo.lock"
+  printf '%s\n' "$2" > "$suite/$1/meta.json"
+  git -C "$suite/$1" init -q
+  git -C "$suite/$1" add -- Cargo.toml Cargo.lock meta.json
+  git -C "$suite/$1" commit -q -m initial
+}
+mk lib2 '{"packages": [{"name": "lib2", "version": "1.0.0", "publish": []}]}'
+git -C "$suite/lib2" tag v1.0.0
+mk app2 '{"packages": [{"name": "app2", "version": "1.0.0", "publish": [], "dependencies": [{"name": "lib2", "source": "git+https://github.com/Magnetar-OS/lib2.git?tag=v1.0.0"}]}]}'
+
+run "$suite/scripts/suite-deps.sh" upstream app2 || { bad "upstream refused app2 on lib2's newest tag:"; cat "$w/out"; }
+grep -qxF 'app2  (after lib2)' <(run "$suite/scripts/suite-deps.sh" order; cat "$w/out") \
+  || { bad "order did not put app2 after lib2:"; cat "$w/out"; }
+
+echo 'pub fn changed() {}' > "$suite/lib2/lib.rs"
+git -C "$suite/lib2" add lib.rs && git -C "$suite/lib2" commit -q -m change
+if run "$suite/scripts/suite-deps.sh" upstream app2; then
+  bad "upstream let app2 go while lib2 has unreleased changes"
+fi
+grep -qF 'lib2 has changes since v1.0.0 that are not released' "$w/out" || { bad "upstream did not name lib2's unreleased changes:"; cat "$w/out"; }
+
+git -C "$suite/lib2" tag v1.1.0
+if run "$suite/scripts/suite-deps.sh" upstream app2; then
+  bad "upstream let app2 go on lib2 v1.0.0 while v1.1.0 is out"
+fi
+grep -qF 'app2 uses lib2 v1.0.0, not v1.1.0' "$w/out" || { bad "upstream did not name the stale tag:"; cat "$w/out"; }
 
 (( fail == 0 )) && echo PASS
 exit "$fail"
