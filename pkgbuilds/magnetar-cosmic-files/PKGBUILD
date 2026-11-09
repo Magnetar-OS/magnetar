@@ -25,7 +25,10 @@ pkgname=magnetar-cosmic-files
 _pkgname=cosmic-files
 pkgver=1.11.0
 pkgrel=1
-epoch=1
+# No epoch, unlike Arch's cosmic-files: a ':' in the package filename is
+# rejected by actions/upload-artifact, and a new package name has no older
+# versions to sort past. The provided version keeps Arch's epoch below, so a
+# versioned dependency on cosmic-files still compares the same.
 pkgdesc='File manager for the COSMIC desktop, with space handing other files to the desktop previewer'
 arch=(x86_64)
 url=https://github.com/pop-os/cosmic-files
@@ -48,7 +51,7 @@ makedepends=(
   lld
 )
 optdepends=('magnetar-peek: previews the files space hands over')
-provides=("$_pkgname=$epoch:$pkgver")
+provides=("$_pkgname=1:$pkgver")
 conflicts=("$_pkgname")
 source=(
   "git+https://github.com/pop-os/cosmic-files.git#tag=epoch-${pkgver}"
