@@ -19,6 +19,12 @@ configuration. The applications keep their own changelogs.
 
 ### Changed
 
+- Magnetar has a new logo: an M drawn as one stroke, with the star held in
+  its middle. It replaces the dipole-field mark as the system logo
+  (`magnetar-branding`, which COSMIC Settings' About page and fastfetch read
+  through `LOGO=magnetar`), in the installer's sidebar and welcome screen
+  (`magnetar-calamares`), on the live ISO's GRUB and BIOS boot menus, and in
+  fastfetch and the ASCII logos under `/usr/share/magnetar/` (`magnetar-settings`).
 - The live ISO follows CachyOS-Live-ISO to `3215497`, which replaces its
   NVIDIA module loader script with the `cachyos-drm-awaiter` package: the live
   session's greeter now waits for the GPU drivers to load, and loads NVIDIA's

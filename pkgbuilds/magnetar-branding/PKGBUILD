@@ -21,7 +21,7 @@
 # rename: they look their group up by the OS name (see its limine section).
 pkgname=magnetar-branding
 pkgver=20260908
-pkgrel=3
+pkgrel=4
 pkgdesc="Magnetar system identity: os-release, lsb-release, issue and the logo"
 arch=('any')
 url="https://github.com/Magnetar-OS/magnetar"

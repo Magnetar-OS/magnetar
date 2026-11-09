@@ -13,7 +13,7 @@
 # package upgrade is not a thing this should do.
 pkgname=magnetar-settings
 pkgver=0.1.0
-pkgrel=4
+pkgrel=5
 pkgdesc="COSMIC session defaults for Magnetar"
 arch=('any')
 url="https://github.com/Magnetar-OS/magnetar"
@@ -86,7 +86,7 @@ package() {
   # fastfetch: our logo, and the config that points at it.
   #
   # Two forms of the same art. logo.ans is what the config actually loads: the
-  # detailed dipole field with its 24-bit gradient baked in, which needs a
+  # monogram in block art with its 24-bit gradient baked in, which needs a
   # truecolor terminal. logo.txt is the plain-text same drawing, kept for a
   # 16-colour TTY and for anything that wants to colour it itself (neofetch's
   # --ascii, a motd). Dropping either one leaves a case with no logo.
