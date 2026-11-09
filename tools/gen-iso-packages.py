@@ -40,7 +40,7 @@ cosmic-panel
 cosmic-applets
 cosmic-app-library
 cosmic-bg
-cosmic-files
+magnetar-cosmic-files
 cosmic-greeter
 cosmic-icon-theme
 cosmic-idle

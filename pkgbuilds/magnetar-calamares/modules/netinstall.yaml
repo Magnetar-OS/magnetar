@@ -46,7 +46,7 @@
      - cosmic-session
      - cosmic-greeter
      - cosmic-settings
-     - cosmic-files
+     - magnetar-cosmic-files
      - cosmic-store
      - cosmic-terminal
      - cosmic-text-editor

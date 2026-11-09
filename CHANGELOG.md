@@ -8,6 +8,15 @@ configuration. The applications keep their own changelogs.
 
 ### Added
 
+- Space in the file manager previews PDFs, video, audio and archives. COSMIC
+  Files' own viewer only opens images and text, and space did nothing on
+  anything else. `magnetar-cosmic-files` is COSMIC Files 1.11.0 with a patch
+  that hands those files to the desktop previewer (Peek), and
+  `magnetar-desktop` and the installer now install it in place of
+  `cosmic-files`. On an existing install, `pacman -Syu` asks to remove
+  `cosmic-files` for it: answer yes. The question defaults to no, so an
+  unattended `--noconfirm` upgrade stops there.
+
 - An installed system has Bluetooth, a firewall, a full font set and audio
   firmware. Magnetar's installer list replaced CachyOS's entirely and left out
   what CachyOS's common group brought, so an install had no `bluez`, no `ufw`,

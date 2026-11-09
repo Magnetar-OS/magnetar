@@ -10,7 +10,7 @@
 #                be able to block the desktop from installing.
 pkgname=magnetar-desktop
 pkgver=0.1.0
-pkgrel=7
+pkgrel=8
 pkgdesc="Magnetar: COSMIC desktop on CachyOS"
 arch=('any')
 url="https://github.com/Magnetar-OS/magnetar"
@@ -31,7 +31,9 @@ depends=(
   'cosmic-session'
   'cosmic-greeter'
   'cosmic-settings'
-  'cosmic-files'
+  # COSMIC's file manager with space handing PDFs, video, audio and archives
+  # to Peek; pkgbuilds/magnetar-cosmic-files. Provides cosmic-files.
+  'magnetar-cosmic-files'
   'cosmic-store'
   'cosmic-notifications'
   'cosmic-osd'
