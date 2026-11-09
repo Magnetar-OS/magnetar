@@ -74,6 +74,7 @@ for p in magnetar-keyring magnetar-repos magnetar-settings magnetar-branding mag
   _build "$root/pkgbuilds/$p" "$p" nodeps
 done
 _build "$root/pkgbuilds/cutecosmic" cutecosmic sync
+_build "$root/pkgbuilds/magnetar-cosmic-files" magnetar-cosmic-files sync
 
 echo "==> applications (local working trees)"
 if [[ -d $root/build/pkgbuilds-local ]]; then

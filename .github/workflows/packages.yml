@@ -82,7 +82,8 @@ jobs:
         # `nodeps` for the configuration packages. They have no build step, so
         # their dependencies matter only at install time — and they depend on
         # each other and on the suite, none of which a fresh container has.
-        # cutecosmic compiles, so it resolves its build dependencies.
+        # cutecosmic and magnetar-cosmic-files compile, so they resolve their
+        # build dependencies.
         include:
           - { pkg: magnetar-keyring,   deps: nodeps }
           - { pkg: magnetar-repos,     deps: nodeps }
@@ -91,6 +92,7 @@ jobs:
           - { pkg: magnetar-desktop,   deps: nodeps }
           - { pkg: magnetar-calamares, deps: nodeps }
           - { pkg: cutecosmic,         deps: sync }
+          - { pkg: magnetar-cosmic-files, deps: sync }
     steps:
       - name: Add the CachyOS repository
         run: |

@@ -1,0 +1,88 @@
+# Maintainer: Dominikos Pritis <hey@myroomie.gr>
+#
+# COSMIC's file manager with one change: pressing space on a file the built-in
+# gallery cannot show (anything but images and text — PDFs, video, audio,
+# archives) hands it to the desktop previewer over
+# org.gnome.NautilusPreviewer2, which is what Peek serves. Without the patch
+# the key does nothing on those files.
+#
+# Arch's PKGBUILD (archlinux/packaging/packages/cosmic-files) plus
+# cosmic-files-previewer-handoff.patch. Peek keeps the same change rebased onto
+# cosmic-files master in peek/contrib/0001-cosmic-files-previewer-handoff.patch;
+# this copy is that change against the release tag below, so a behaviour change
+# goes into both. This package goes away once a cosmic-files release carries
+# the change.
+#
+# WHY A DIFFERENT NAME. pacman takes a package from the first repository that
+# carries its name, whatever the version, and the CachyOS repositories carrying
+# cosmic-files sit above [magnetar] (docs/REPOS.md). A package named
+# cosmic-files here would never be installed. Under its own name it provides
+# and conflicts with cosmic-files, the way magnetar-peek avoids Arch's peek.
+#
+# Maintenance cost: on every cosmic-files release, move pkgver to the new
+# epoch-* tag, check that both patches still apply, and publish.
+pkgname=magnetar-cosmic-files
+_pkgname=cosmic-files
+pkgver=1.11.0
+pkgrel=1
+epoch=1
+pkgdesc='File manager for the COSMIC desktop, with space handing other files to the desktop previewer'
+arch=(x86_64)
+url=https://github.com/pop-os/cosmic-files
+license=(GPL-3.0-only)
+depends=(
+  cosmic-icon-theme
+  libgcc
+  glib2
+  glibc
+  gvfs
+  libxkbcommon
+  xdg-utils
+  zstd
+)
+makedepends=(
+  cargo
+  clang
+  git
+  just
+  lld
+)
+optdepends=('magnetar-peek: previews the files space hands over')
+provides=("$_pkgname=$epoch:$pkgver")
+conflicts=("$_pkgname")
+source=(
+  "git+https://github.com/pop-os/cosmic-files.git#tag=epoch-${pkgver}"
+  cosmic-files-lto.patch
+  cosmic-files-previewer-handoff.patch
+)
+b2sums=('461fa757dec1cd2abac59465199162a3f27bb1e65a7c0e7af72ccfe67cc19968531873287b9968b84f00969e781b60773c478c17cd32e067515610f90e82aee2'
+        '105231f886affb3274d18bbe95d0fc27ba33cb557245ca567caccc9b0f5fbae0b7d92a81c0b2784130659e81b73e374ac735f8ad9b06adad18b4e4fd227164b5'
+        '78f76f1996a3eb3268a90cda78fe508871f5f24591a5e550c3cf7ccefe14870c7c2d8ddcab2d45ff226317ec7a27233dbbe851d9c9900060f0c614bc84a19fad')
+
+prepare() {
+  cd "$_pkgname"
+  patch -Np1 -i ../cosmic-files-lto.patch
+  patch -Np1 -i ../cosmic-files-previewer-handoff.patch
+  # The tree pins its own toolchain (rust-toolchain.toml); build with the
+  # system's, as Arch does.
+  export RUSTUP_TOOLCHAIN=stable
+  cargo fetch --locked
+}
+
+build() {
+  cd "$_pkgname"
+  export RUSTUP_TOOLCHAIN=stable
+  # Set, not appended: CachyOS's /etc/makepkg.conf.d/rust.conf adds
+  # -C target-cpu=native, which would make a locally built package SIGILL on
+  # an older CPU.
+  export RUSTFLAGS="-C opt-level=3 -C link-arg=-fuse-ld=lld"
+  export ZSTD_SYS_USE_PKG_CONFIG=1
+  CC=clang just build-release --frozen
+}
+
+package() {
+  cd "$_pkgname"
+  just rootdir="${pkgdir}" install
+}
+
+# vim: ts=2 sw=2 et:
