@@ -42,6 +42,9 @@ sign() { gpg --batch --yes -u "$KEY" --passphrase "${LINUX_GPG_PASSPHRASE:-}" --
 # A package file's name without version, release and architecture.
 pkgname_of() { printf '%s' "$1" | sed -E 's/-[^-]+-[^-]+-[^-]+\.pkg\.tar\.zst$//'; }
 
+# A package file's version-release.
+version_of() { local base="${1%-*.pkg.tar.zst}"; printf '%s' "${base#"$(pkgname_of "$1")"-}"; }
+
 # The files of package $1 in the current directory. The [0-9] guard keeps
 # magnetar-repos-* from matching another package's files.
 files_of() {
@@ -73,7 +76,7 @@ finish_db() {
 # Distro packages are x86_64 or `any`; the distribution is x86_64 only, so
 # they go in x86_64/ alone.
 stage() {
-  local pkg f name old dir p sig n site_bytes superseded gone
+  local pkg f name old dir p sig n site_bytes superseded gone newer
   rm -rf "$STAGE"
   git clone -q --depth 1 "$REMOTE" "$STAGE"
   cd "$STAGE/x86_64"
@@ -96,14 +99,24 @@ stage() {
       esac
       continue
     fi
+    # Nothing superseded is kept (below), so an older build than the one
+    # published would replace it in the database: never publish backwards.
+    newer="$(files_of "$(pkgname_of "$f")" | while read -r p; do
+      [ "$(vercmp "$(version_of "$p")" "$(version_of "$f")")" -le 0 ] || echo "$p"
+    done)"
+    if [ -n "$newer" ]; then
+      echo "Skipping $f: [magnetar] already has the newer $newer"
+      continue
+    fi
     cp "$pkg" .
     sign "$f"
     ADDED+=("$f")
-    # Keep one superseded version for rollback, as the app pipelines do: a
-    # GitHub Pages site may not exceed 1 GB.
+    # Keep no superseded version, as the app pipelines do (keep: '0'): with
+    # one kept for every package on both architectures the site passed the
+    # 950 MiB that leaves room under GitHub Pages' 1 GB limit (2026-11-21).
     name="$(pkgname_of "$f")"
     # (`|| true`: grep exits 1 when this is the package's only version.)
-    files_of "$name" | grep -vx "$f" | sort -V | head -n -1 | while read -r old; do
+    files_of "$name" | grep -vx "$f" | while read -r old; do
       echo "Pruning superseded $old"; rm -f "$old" "$old.sig"
     done || true
   done

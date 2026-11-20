@@ -6,8 +6,8 @@
 # editor's pipeline has published magnetar-pencil, which replaces
 # `pencil<=1.2.0`, in both architectures, and the old `pencil` is still in the
 # databases with its files. One run must then
-#  - add a new distribution package version, signed, and prune to the newest
-#    plus one superseded version;
+#  - add a new distribution package version, signed, and prune every
+#    superseded version;
 #  - finish the rename: `pencil` leaves both databases and both directories,
 #    while a package whose version a `replaces` bound does not cover stays;
 #  - leave every file signed, the databases signed and equal to their
@@ -85,7 +85,7 @@ publish() { ARCH_REPO_REMOTE="$w/arch-repo.git" fakeroot bash "$M/tools/publish-
 
 # --- one publish ---------------------------------------------------------------
 mkpkg "$w/dist" magnetar-repos 0.1.0-7 any seven
-mkpkg "$w/dist" magnetar-repos 0.1.0-6 any six          # rebuilt, unchanged: already published
+mkpkg "$w/dist" magnetar-repos 0.1.0-6 any six          # older than what is published: never added back
 mkpkg "$w/dist" magnetar-settings 0.1.0-1 any settings   # a package's first version
 publish "$w/dist" || { echo "FAIL: publish-packages.sh failed:"; cat "$w/out"; exit 1; }
 
@@ -95,8 +95,9 @@ has() { [[ -e $r/$1 ]]; }
 entries() { bsdtar -tf "$r/$1/magnetar.db" | sed -n 's|/desc$||p' | sort | paste -sd' '; }
 
 has x86_64/magnetar-repos-0.1.0-7-any.pkg.tar.zst || bad "the new version was not added"
-has x86_64/magnetar-repos-0.1.0-6-any.pkg.tar.zst || bad "the one superseded version was not kept"
-! has x86_64/magnetar-repos-0.1.0-5-any.pkg.tar.zst || bad "the second superseded version was not pruned"
+! has x86_64/magnetar-repos-0.1.0-6-any.pkg.tar.zst || bad "the superseded version was not pruned"
+! has x86_64/magnetar-repos-0.1.0-6-any.pkg.tar.zst.sig || bad "the superseded version's signature was left"
+! has x86_64/magnetar-repos-0.1.0-5-any.pkg.tar.zst || bad "the older superseded version was not pruned"
 ! has x86_64/magnetar-repos-0.1.0-5-any.pkg.tar.zst.sig || bad "a pruned package's signature was left"
 has x86_64/magnetar-settings-0.1.0-1-any.pkg.tar.zst || bad "a package's first version was not added"
 
