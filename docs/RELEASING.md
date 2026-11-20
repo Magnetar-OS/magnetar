@@ -146,17 +146,29 @@ ashpd type crosses into libcosmic), and rsa left it when locket stopped
 needing ssh-key's `rsa` feature — the feature that asked for an rsa feature
 rc.20 removed.
 
-Exact (`=`) pins exist in one place: locket's `rsa` and `ssh-key` release
-candidates, which promise each other nothing; its manifest says how to move
-them, and `check` lists a newer release candidate when one appears.
+Exact (`=`) pins exist in one place: locket's `ssh-key` release candidate
+(0.7.0-rc.12), since release candidates promise each other nothing; its
+manifest says how to move it, and `check` lists a newer release candidate
+when one appears. `rsa` lost its pin on 2026-11-21 when 0.10.0 was released.
 magnetar-web keeps `typescript` at 6.0.3 because `@astrojs/check` (0.9.12,
 the newest) does not accept 7; its README says so.
 
 ## What is not a Cargo crate
 
 - **Rust toolchain**: every repo's `rust-toolchain.toml` and `rust-version`
-  name the same release. Edit those two places per repo; never a blind text
-  replace, which has rewritten released changelog entries before.
+  name the same release (1.100.0 since 2026-11-21; pocket-core and locket's
+  fuzz workspace carry their own `rust-version`). Edit those places per repo,
+  and the few docs that name the pin; never a blind text replace, which has
+  rewritten released changelog entries before. A new toolchain brings new
+  clippy and Cargo lints (1.100: `map_or_default`, `double_must_use` on
+  functions returning `ExitCode`, and unused dependencies), so raise it in the
+  same pass as the dependencies, library tier first, and fix what the gate
+  reports. Changing `rust-version` changes every published crate's manifest,
+  so every crates.io crate gets a new version.
+- **[magnetar]'s size**: GitHub Pages refuses a site over 1 GB, and the kit
+  stops at 950 MiB. Every app passes `keep: '0'` and `publish-packages.sh`
+  prunes the same way, so only the newest version of each package is in the
+  repository; older ones stay on their GitHub releases.
 - **linux-release-kit**: every app pins its workflows to one commit. Move them
   all together; read the kit's commits since the old pin for new required
   inputs, secrets or permissions first.
