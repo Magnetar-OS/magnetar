@@ -111,6 +111,29 @@ cachyos:lib32-vulkan-radeon
 cachyos:lib32-vulkan-swrast
 cachyos:lib32-vulkan-virtio
 
+# PHP — CachyOS rebuilds of the release [extra] has (8.5.13-1 in both),
+# joined by 2026-11-21. The znver4 set carries its own, so they show at every
+# other level. Magnetar installs no PHP.
+cachyos:php
+cachyos:php-apache
+cachyos:php-cgi
+cachyos:php-dblib
+cachyos:php-embed
+cachyos:php-enchant
+cachyos:php-fpm
+cachyos:php-gd
+cachyos:php-odbc
+cachyos:php-pgsql
+cachyos:php-phpdbg
+cachyos:php-snmp
+cachyos:php-sodium
+cachyos:php-sqlite
+cachyos:php-tidy
+cachyos:php-xsl
+# nodejs — CachyOS's 26.13.1-3 over extra's -2, joined by 2026-11-21. The v3
+# and znver4 sets carry their own, so it shows on baseline and v4 machines.
+cachyos:nodejs
+
 # --- Baseline CPUs only ------------------------------------------------------
 # On a machine with no optimised set (below x86-64-v3) these come from
 # [cachyos]; on every other machine the optimised set above it carries them and
@@ -147,6 +170,15 @@ cachyos:sddm
 cachyos:sentencepiece
 cachyos:python-sentencepiece
 cachyos:noctalia-greeter
+# Joined by 2026-11-21. python and python-tests lag core (3.14.9-2 against
+# 3.14.10-1), so a baseline machine keeps the older Python until CachyOS
+# catches up; coolercontrol and coolercontrold lead extra (5.1.2-1 against
+# 5.1.1-2); dux-shell is the same release (2.1.2-1).
+cachyos:python
+cachyos:python-tests
+cachyos:coolercontrol
+cachyos:coolercontrold
+cachyos:dux-shell
 
 # Power and hardware
 cachyos:power-profiles-daemon
