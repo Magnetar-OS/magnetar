@@ -42,6 +42,7 @@ FOLLOWS=(
     "usvg        resvg  circle's tests parse with the parser iced renders with"
     "imap-proto  imap   cosmic-pim-mail matches on the attribute types imap hands back"
     "rand_pgp    pgp    cosmic-pim-mail's tests generate keys with the rand pgp takes"
+    "jiff        libcosmic  slate hands libcosmic's calendar widget jiff dates"
 )
 
 usage() {

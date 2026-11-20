@@ -137,6 +137,7 @@ after everything else is upgraded, so it moves the day its leader does.
 | `usvg` (circle, dev) | `resvg` (iced) | the tests parse with the parser iced renders with |
 | `imap-proto` (cosmic-pim-mail) | `imap` | LIST and UID-set answers come back as imap-proto's types, which imap does not re-export |
 | `rand_pgp` (cosmic-pim-mail, dev) | `pgp` | the tests generate keys, and pgp's key generation takes its own rand's traits |
+| `jiff` (slate) | `libcosmic` | the editor hands `widget::calendar` a `jiff::civil::Date`, which has to be libcosmic's jiff |
 
 Before 2026-11-07 the list was crates held back by hand, which hid them
 from `check` until someone re-read the reasons. zbus and ashpd left it for
