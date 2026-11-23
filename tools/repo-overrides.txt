@@ -205,6 +205,12 @@ cachyos:python-tcolorpy
 cachyos:pahole
 cachyos:ostra-cg
 
+# Joined by 2026-11-23, reported by the Repo policy run. Both are leaf
+# applications (a flash-drive tester and a reference manager): no Magnetar
+# package and nothing on the ISO depends on either.
+cachyos:f3
+cachyos:zotero
+
 # Desktop — NOT inherited by Magnetar.
 # plasma-login-manager and dms-shell are CachyOS's Plasma session pieces.
 # Magnetar is a COSMIC distribution and installs neither, so these are recorded
