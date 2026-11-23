@@ -31,6 +31,12 @@ DROP = {
     # distribution is not a feature; someone would eventually run it and get a
     # CachyOS install from a Magnetar disc.
     'cachyos-cli-installer-new',
+    # CachyOS's ISO moved from cachyos-calamares-next to cachyos-calamares
+    # (CachyOS-Live-ISO 5ccdc32, 2026-11-20). magnetar-calamares depends on
+    # cachyos-calamares-next and is tested against it, and the two conflict, so
+    # the ISO keeps the one Magnetar's installer is built on until
+    # magnetar-calamares itself moves.
+    'cachyos-calamares',
 }
 
 COSMIC = """# --- COSMIC ---------------------------------------------------------------

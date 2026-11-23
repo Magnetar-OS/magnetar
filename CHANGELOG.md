@@ -30,9 +30,9 @@ configuration. The applications keep their own changelogs.
 
 - The ISO is built from CachyOS-Live-ISO as of 2026-11-22 (it was pinned to
   2026-09-30). From upstream: GRUB menus synced with archiso 92, the memtest86+
-  boot entries fixed, a reworked display-manager check, `cachyos-calamares` in
-  place of `cachyos-calamares-next`, `ghostty-terminfo` and `kmscon-terminfo`
-  added, `linux-atm` and the leftover broadcom-wl modprobe file dropped.
+  boot entries fixed, a reworked display-manager check, `ghostty-terminfo` and
+  `kmscon-terminfo` added, `linux-atm` and the leftover broadcom-wl modprobe
+  file dropped. The installer stays on `cachyos-calamares-next`.
 - Magnetar has a new logo: an M drawn as one stroke, with the star held in
   its middle. It replaces the dipole-field mark as the system logo
   (`magnetar-branding`, which COSMIC Settings' About page and fastfetch read
